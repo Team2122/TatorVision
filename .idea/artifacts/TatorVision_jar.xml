@@ -1,0 +1,15 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TatorVision:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/TatorVision_jar</output-path>
+    <root id="archive" name="TatorVision.jar">
+      <element id="module-output" name="TatorVision" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.yaml/snakeyaml/1.15/3b132bea69e8ee099f416044970997bde80f4ea6/snakeyaml-1.15.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.7.5/eca40b06949cca9a9c96b637103bd6956e723f6b/jackson-dataformat-yaml-2.7.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/edu.wpi.first.wpilib.networktables.java/NetworkTables/3.0.0-SNAPSHOT/f58f03ec93979596fa034cecdff2a09d46c1d511/NetworkTables-3.0.0-SNAPSHOT-desktop.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.7.5/2cf27d22e512314e3139b292c63a3377dfb45dbb/jackson-annotations-2.7.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.7.5/dc3d2d9a654227007529c0fb6e86de9bcd038f5f/jackson-core-2.7.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.7.5/ca7084021d9f213003eafe2583d1783d3d6a3685/jackson-databind-2.7.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="/usr/local/Cellar/opencv3/3.0.0/share/OpenCV/java/opencv-300.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

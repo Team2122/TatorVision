@@ -1,0 +1,27 @@
+group 'org.teamtators.vision'
+version '1.0'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.5
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+    maven {
+        url = "http://first.wpi.edu/FRC/roborio/maven/development"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile group: 'edu.wpi.first.wpilib.networktables.java', name: 'NetworkTables', version: '3.0.0-SNAPSHOT', classifier: 'desktop'
+    compile group: 'org.opencv', name: 'opencv-300'
+    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.7.5'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.7.5'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.7.5'
+    //compile group: 'org.bytedeco.javacpp-presets', name: 'opencv', version: '3.0.0-1.1'
+}

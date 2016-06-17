@@ -1,0 +1,6 @@
+portNumber: 2123
+lowerThreshold: [60, 150, 30]
+upperThreshold: [100, 255, 255]
+minArea: 1000
+maxArea: 100000 #about 1/3 of the screen size (640x480)
+arcLengthPercentage:  0.01
