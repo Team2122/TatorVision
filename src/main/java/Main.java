@@ -1,5 +1,6 @@
 
 import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.videoio.*;
 import org.opencv.imgproc.*;
 
@@ -10,6 +11,7 @@ import org.bytedeco.javacpp.opencv_videoio.*;
 import org.bytedeco.javacpp.opencv_imgproc.*;
 */
 
+import java.awt.*;
 import java.io.File;
 
 //import com.fasterxml.jackson.core.*;
@@ -32,7 +34,9 @@ public class Main {
 
         float arcLengthPercentage = 0.01f;
 
-        int portNumber = 2123;
+        String robotIPAddress = "10.1.21.22";
+        String networkTableName = "GRIP";
+        int frameDelay = 40;
 
         System.out.println(Core.NATIVE_LIBRARY_NAME);
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -54,7 +58,8 @@ public class Main {
                 int[] lowerThresholdArray = configData.getLowerThreshold();
                 int[] upperThresholdArray = configData.getUpperThreshold();
 
-                portNumber = configData.getPortNumber();
+                robotIPAddress = configData.getRobotIPAddress();
+                frameDelay = configData.getFrameDelay();
 
                 lowerThreshold = new Scalar(lowerThresholdArray[0], lowerThresholdArray[1], lowerThresholdArray[2]);
                 upperThreshold = new Scalar(upperThresholdArray[0], upperThresholdArray[1], upperThresholdArray[2]);
@@ -74,8 +79,7 @@ public class Main {
         } else System.out.println("Falling back to default configuration");
 
 
-        VisionServer server = new VisionServer(portNumber);
-        ObjectOutputStream objectOutputStream = null;
+        VisionServer server = new VisionServer(robotIPAddress, networkTableName);
 
         testCapture.open(0);
         testCapture.read(originalImage);
@@ -88,36 +92,21 @@ public class Main {
 
         Thread serverThread = new Thread(server);
         serverThread.start();
-        while(!server.foundClient()) {
-            //wait for a client
-            Thread.sleep(10);
-        }
-        try {
-            objectOutputStream = new ObjectOutputStream(server.getOutputStream());
-        } catch(java.io.IOException e) {
-            System.out.println("Failed to get output stream");
-            e.printStackTrace();
-        }
+
+        long lastTimeMarker = System.currentTimeMillis();
 
         while (true) {
-
             testCapture.read(originalImage);
             Core.flip(originalImage, originalImage, 1); //flip on x axis to look like a mirror
             testMat = originalImage.clone();
 
-            String serverMessage = server.readLine();
-            if(serverMessage != null) {
-                if (serverMessage.contains("getFrame")) {
-                    try {
-                        objectOutputStream.writeObject(ImageDisplay.Mat2BufferedImage(originalImage));
-                        objectOutputStream.close();
-                    } catch (java.io.IOException e) {
-                        System.out.println("Failed to serialize frame");
-                        e.printStackTrace();
-                    }
-                }
-                System.out.println(serverMessage);
+            if(System.currentTimeMillis() - lastTimeMarker > frameDelay) {
+                Mat streamFrame = originalImage.clone();
+                //Imgproc.pyrDown(streamFrame, streamFrame, new Size(0.5, 0.5));
+                server.queueImage(ImageDisplay.Mat2BufferedImage(streamFrame));
+                lastTimeMarker = System.currentTimeMillis();
             }
+
             Imgproc.cvtColor(testMat, testMat, Imgproc.COLOR_BGR2HSV);
             Core.inRange(testMat, lowerThreshold, upperThreshold, testMat);
 

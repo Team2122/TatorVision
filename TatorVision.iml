@@ -22,7 +22,6 @@
     <orderEntry type="library" exported="" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.7.5" level="project" />
     <orderEntry type="library" exported="" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.7.5" level="project" />
     <orderEntry type="library" name="Gradle: edu.wpi.first.wpilib.networktables.java:NetworkTables:3.0.0-SNAPSHOT:desktop" level="project" />
-    <orderEntry type="library" name="Gradle: org.opencv:opencv-300:" level="project" />
-    <orderEntry type="library" name="OpenCV 3.0.0" level="project" />
+    <orderEntry type="library" exported="" name="Gradle: org.opencv:opencv-300:" level="project" />
   </component>
 </module>

@@ -1,4 +1,6 @@
-portNumber: 2123
+robotIPAddress: "10.1.21.22"
+networkTableName: "GRIP"
+frameDelay: 30  #a little 30 fps
 lowerThreshold: [60, 150, 30]
 upperThreshold: [100, 255, 255]
 minArea: 1000

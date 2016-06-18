@@ -1,20 +1,37 @@
-import org.opencv.core.Scalar;
 //import org.bytedeco.javacpp.opencv_core.Scalar;
 
 public class VisionConfig {
-    private int portNumber;
+    private String robotIPAddress;
+    private String networkTableName;
+    private int frameDelay;
     private int[] lowerThreshold;
     private int[] upperThreshold;
     private int minArea;
     private int maxArea;
     private float arcLengthPercentage;
 
-    public int getPortNumber() {
-        return portNumber;
+    public String getRobotIPAddress() {
+        return robotIPAddress;
     }
 
-    public void setPortNumber(int portNumber) {
-        this.portNumber = portNumber;
+    public void setRobotIPAddress(String robotIPAddress) {
+        this.robotIPAddress = robotIPAddress;
+    }
+
+    public String getNetworkTableName() {
+        return networkTableName;
+    }
+
+    public void setNetworkTableName(String networkTableName) {
+        this.networkTableName = networkTableName;
+    }
+
+    public int getFrameDelay() {
+        return frameDelay;
+    }
+
+    public void setFrameDelay(int frameDelay) {
+        this.frameDelay = frameDelay;
     }
 
     public int[] getLowerThreshold() {
