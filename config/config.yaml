@@ -1,7 +1,8 @@
-robotIPAddress: "10.1.21.22"
-networkTableName: "GRIP"
-frameDelay: 30  #a little 30 fps
-lowerThreshold: [60, 150, 30]
+robotIPAddress: "roboRIO-2122-FRC.local"
+networkTableName: "TatorVision"
+mjpegPortNumber:  8080
+frameDelay: 20  #a little over 30 fps
+lowerThreshold: [60, 100, 30]  #Thresholds are in HSV format
 upperThreshold: [100, 255, 255]
 minArea: 1000
 maxArea: 100000 #about 1/3 of the screen size (640x480)

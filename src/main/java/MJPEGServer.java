@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.tables.ITable;
 
 import javax.imageio.ImageIO;
 
-public class VisionServer implements Runnable {
+public class MJPEGServer implements Runnable {
     private ServerSocket serverSocket;
     private Socket clientSocket;
     private InetAddress clientAddress;
@@ -16,17 +16,12 @@ public class VisionServer implements Runnable {
     private DataOutputStream out;
     private BufferedReader in;
 
-    private NetworkTable table;
-    private String robotIPAddress;
-    private String tableName;
     private List<byte[]> imageByteList;
-    private ArrayList<BufferedImage> imageQueue;
+    private List<BufferedImage> imageQueue;
 
-    public VisionServer(String robotIPAddress, String tableName) {
-        this.robotIPAddress = robotIPAddress;
-        this.tableName = tableName;
-        portNumber = 8080;
-        imageQueue = new ArrayList<>();
+    public MJPEGServer(int portNumber) {
+        this.portNumber = portNumber;
+        imageQueue = new ArrayList<BufferedImage>();
     }
 
     private void init() {
@@ -44,8 +39,8 @@ public class VisionServer implements Runnable {
                 "Connection: close\r\n" +
                 "Max-Age: 0\r\n" +
                 "Expires: 0\r\n" +
-                //"Cache-Control: no-cache, private\r\n" +
-                "Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0\r\n" +
+                "Cache-Control: no-cache, private\r\n" +
+                //"Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0\r\n" +
                 "Pragma: no-cache\r\n" +
                 "Content-Type: multipart/x-mixed-replace; " +
                 "boundary=--JPEG_BOUNDARY\r\n\r\n").getBytes());
@@ -59,16 +54,15 @@ public class VisionServer implements Runnable {
 
     public void run() {
         init();
-         //right now this spams errors to the console because I don't have a robot (I think)
-        NetworkTable.setServerMode();
-        NetworkTable.setIPAddress(robotIPAddress);
-        table = NetworkTable.getTable(tableName);
-        ITable subTable = table.getSubTable("foundGoalContours");
 
         while (true) {
+            try {
+                Thread.sleep(0);    //For some reason, the thread hangs if no code executes here
+            } catch(InterruptedException e) {
+                e.printStackTrace();
+            }
             if (imageQueue.size() > 0) {
                 try {
-                    for (int i = 0; i < imageQueue.size(); i++) {
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8192 * 4);
                         ImageIO.write(imageQueue.remove(0), "jpg", byteArrayOutputStream);
                         byte[] data = byteArrayOutputStream.toByteArray();
@@ -82,7 +76,6 @@ public class VisionServer implements Runnable {
                         out.write(data);
                         out.write("\r\n\r\n".getBytes());
                         out.flush();
-                    }
                 } catch (java.net.SocketException e) {
                     System.out.println("Socket Exception!");
                     System.out.println("Retrying...");
@@ -98,15 +91,17 @@ public class VisionServer implements Runnable {
                     e.printStackTrace();
                 }
             }
-
-            if(imageQueue.size() > 10) {
-                imageQueue.remove(0);
-            }
         }
     }
 
     public void queueImage(BufferedImage image) {
-        imageQueue.add(image);
+        if(image != null) {
+            imageQueue.add(image);
+        }
+    }
+
+    public int getQueueLength() {
+        return imageQueue.size();
     }
 
 }

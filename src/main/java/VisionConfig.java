@@ -3,6 +3,7 @@
 public class VisionConfig {
     private String robotIPAddress;
     private String networkTableName;
+    private int mjpegPortNumber;
     private int frameDelay;
     private int[] lowerThreshold;
     private int[] upperThreshold;
@@ -24,6 +25,14 @@ public class VisionConfig {
 
     public void setNetworkTableName(String networkTableName) {
         this.networkTableName = networkTableName;
+    }
+
+    public int getmjpegPortNumber() {
+        return mjpegPortNumber;
+    }
+
+    public void setmjpegPortNumber(int mjpegportNumber) {
+        this.mjpegPortNumber = this.mjpegPortNumber;
     }
 
     public int getFrameDelay() {
