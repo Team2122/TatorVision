@@ -17,7 +17,7 @@ public class Main {
 
         System.out.println(System.getenv("CLASSPATH"));
 
-        String robotIPAddress = "10.1.21.22";
+        String robotIPAddress = "roboRIO-2122-FRC.local";
         String networkTableName = "TatorVision";
         int MJPEGPortNumber = 8080;
         int frameDelay = 40;
