@@ -21,8 +21,16 @@
     <orderEntry type="library" exported="" name="Gradle: org.yaml:snakeyaml:1.15" level="project" />
     <orderEntry type="library" exported="" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.7.5" level="project" />
     <orderEntry type="library" exported="" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.7.5" level="project" />
-    <orderEntry type="library" name="Gradle: edu.wpi.first.wpilib.networktables.java:NetworkTables:3.0.0-SNAPSHOT:desktop" level="project" />
     <orderEntry type="library" exported="" name="Gradle: org.opencv:opencv-300:" level="project" />
-    <orderEntry type="library" exported="" name="OpenCV 3.0.0" level="project" />
+    <orderEntry type="module-library" exported="" scope="RUNTIME">
+      <library name="Gradle: libopencv_java300:dylib">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/libs/libopencv_java300.dylib" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" exported="" name="Gradle: edu.wpi.first.wpilib.networktables.java:NetworkTables:3.0.0-SNAPSHOT:desktop" level="project" />
   </component>
 </module>

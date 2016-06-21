@@ -1,24 +1,21 @@
+package org.teamtators.vision;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.tables.ITable;
 import org.opencv.core.*;
-import org.opencv.calib3d.*;
 import org.opencv.videoio.*;
 import org.opencv.imgproc.*;
 
-
-import java.io.File;
-
-//import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.*;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 public class Main {
+    public static void main(String[] args) {
 
-    public static void main(String[] args) throws InterruptedException {
+        System.out.println(System.getenv("CLASSPATH"));
 
         String robotIPAddress = "10.1.21.22";
         String networkTableName = "TatorVision";
@@ -34,8 +31,6 @@ public class Main {
         System.out.println(Core.NATIVE_LIBRARY_NAME);
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         //System.load("/usr/local/Cellar/opencv3/3.1.0_3/share/OpenCV/java/libopencv_java310.so");    //for some reason intellij can't recognise libopencv_java310.so
-
-
 
         if (args.length > 0) {
             VisionConfig configData;
@@ -69,15 +64,11 @@ public class Main {
             System.out.println("Done");
         } else System.out.println("Falling back to default configuration");
 
-
-
-
         //Initialize Video Capture
         VideoCapture videoCapture = new VideoCapture();
         //TODO: Test if CAP_PROP_EXPOSURE modifies USB webcam settings
         videoCapture.set(Videoio.CAP_PROP_EXPOSURE, 0.5);
         videoCapture.open(0);
-
 
         //Populate and display originalImage
         Mat originalImage = new Mat();
@@ -85,7 +76,7 @@ public class Main {
         ImageDisplay mainWindow = new ImageDisplay(originalImage);
 
         //Initialize workingMat
-        Mat workingMat = new Mat();
+        Mat workingMat;
 
         //Initialize Morphological Kernels
         Mat erodeKernel = Imgproc.getStructuringElement(Imgproc.MORPH_ERODE, new Size(2.0, 2.0));
@@ -110,7 +101,6 @@ public class Main {
 
             Core.flip(originalImage, originalImage, 1); //flip on x axis to look like a mirror
             workingMat = originalImage.clone();
-
 
             Imgproc.cvtColor(workingMat, workingMat, Imgproc.COLOR_BGR2HSV);
             Core.inRange(workingMat, lowerThreshold, upperThreshold, workingMat);

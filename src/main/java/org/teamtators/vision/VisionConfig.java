@@ -1,3 +1,5 @@
+package org.teamtators.vision;
+
 //import org.bytedeco.javacpp.opencv_core.Scalar;
 
 public class VisionConfig {

@@ -1,5 +1,6 @@
+package org.teamtators.vision;
+
 import org.opencv.core.Mat;
-//import org.bytedeco.javacpp.opencv_core.Mat;
 
 import javax.swing.*;
 import java.awt.*;
@@ -38,7 +39,7 @@ public class ImageDisplay extends JPanel implements MouseMotionListener {
         lbl.setIcon(icon);
         frame.add(lbl);
         frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         imageFrame = frame;
         imageLabel = lbl;
         lbl.addMouseMotionListener(this);
@@ -54,7 +55,7 @@ public class ImageDisplay extends JPanel implements MouseMotionListener {
         lbl.setIcon(icon);
         frame.add(lbl);
         frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         imageFrame = frame;
         imageLabel = lbl;
         lbl.addMouseMotionListener(this);

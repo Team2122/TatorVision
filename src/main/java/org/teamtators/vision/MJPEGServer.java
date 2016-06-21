@@ -1,3 +1,5 @@
+package org.teamtators.vision;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -35,15 +37,15 @@ public class MJPEGServer implements Runnable {
 
             out.write((
                 "HTTP/1.0 200 OK\r\n" +
-                "Server: TatorVision\r\n" +
-                "Connection: close\r\n" +
-                "Max-Age: 0\r\n" +
-                "Expires: 0\r\n" +
-                "Cache-Control: no-cache, private\r\n" +
-                //"Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0\r\n" +
-                "Pragma: no-cache\r\n" +
-                "Content-Type: multipart/x-mixed-replace; " +
-                "boundary=--JPEG_BOUNDARY\r\n\r\n").getBytes());
+                        "Server: TatorVision\r\n" +
+                        "Connection: close\r\n" +
+                        "Max-Age: 0\r\n" +
+                        "Expires: 0\r\n" +
+                        "Cache-Control: no-cache, private\r\n" +
+                        //"Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0\r\n" +
+                        "Pragma: no-cache\r\n" +
+                        "Content-Type: multipart/x-mixed-replace; " +
+                        "boundary=--JPEG_BOUNDARY\r\n\r\n").getBytes());
             out.flush();
             System.out.println("MJPEG Server Initialized");
         } catch (java.io.IOException e) {
@@ -58,50 +60,51 @@ public class MJPEGServer implements Runnable {
         while (true) {
             try {
                 Thread.sleep(0);    //For some reason, the thread hangs if no code executes here
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             if (imageQueue.size() > 0) {
-                try {
+                if (imageQueue.get(0) != null) {
+                    try {
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8192 * 4);
                         ImageIO.write(imageQueue.remove(0), "jpg", byteArrayOutputStream);
                         byte[] data = byteArrayOutputStream.toByteArray();
 
                         out.write((
                             "--JPEG_BOUNDARY\r\n" +
-                            "Content-type: image/jpg\r\n" +
-                            "Content-Length: " +
-                            data.length +
-                            "\r\n\r\n").getBytes());
+                                    "Content-type: image/jpg\r\n" +
+                                    "Content-Length: " +
+                                    data.length +
+                                    "\r\n\r\n").getBytes());
                         out.write(data);
                         out.write("\r\n\r\n".getBytes());
                         out.flush();
-                } catch (java.net.SocketException e) {
-                    System.out.println("Socket Exception!");
-                    System.out.println("Retrying...");
-                    try {
-                        serverSocket.close();
-                        clientSocket.close();
-                    } catch (IOException x) {
-                        System.out.println("Failed to close sockets!");
-                        x.printStackTrace();
+                    } catch (java.net.SocketException e) {
+                        System.out.println("Socket Exception!");
+                        System.out.println("Retrying...");
+                        try {
+                            serverSocket.close();
+                            clientSocket.close();
+                        } catch (IOException x) {
+                            System.out.println("Failed to close sockets!");
+                            x.printStackTrace();
+                        }
+                        init();
+                    } catch (java.io.IOException e) {
+                        e.printStackTrace();
                     }
-                    init();
-                } catch (java.io.IOException e) {
-                    e.printStackTrace();
                 }
             }
         }
     }
 
     public void queueImage(BufferedImage image) {
-        if(image != null) {
+        //if (image != null) {
             imageQueue.add(image);
-        }
+        //}
     }
 
     public int getQueueLength() {
         return imageQueue.size();
     }
-
 }
