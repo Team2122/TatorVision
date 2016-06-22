@@ -16,7 +16,7 @@ public class MJPEGServer implements Runnable {
     private InetAddress clientAddress;
     private int portNumber;
     private DataOutputStream out;
-    private BufferedReader in;
+    //private BufferedReader in;
 
     private List<byte[]> imageByteList;
     private List<BufferedImage> imageQueue;
@@ -33,7 +33,7 @@ public class MJPEGServer implements Runnable {
             clientAddress = clientSocket.getInetAddress();
             System.out.println("Connected to: " + clientAddress);
             out = new DataOutputStream(clientSocket.getOutputStream());
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            //in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             out.write((
                 "HTTP/1.0 200 OK\r\n" +
