@@ -52,9 +52,13 @@ public class FrameProcessor implements Runnable {
     }
 
     public Point process(Mat inputMat) {
+
+        if(inputMat == null) return new Point(-1, -1);
+
         //here we will write any debug info if necessary onto inputMat (displayed in the main thread) and work on a copy of it
-        Mat workingMat = new Mat();
+        Mat workingMat = null;
         if (display || stream) {
+            workingMat = new Mat();
             inputMat.copyTo(workingMat);
         } else {
             workingMat = inputMat;  //if we aren't drawing, we don't need to worry about keeping a clean copy of the frame
@@ -104,7 +108,7 @@ public class FrameProcessor implements Runnable {
 
             Point currentContourLocation = new Point(Imgproc.minAreaRect(contour2f).center.x, Imgproc.minAreaRect(contour2f).center.y);
             contourLocations.add(currentContourLocation);
-            if (debug && display) {
+            if (debug && display || debug && stream) {
                 Imgproc.circle(inputMat, currentContourLocation, 2, new Scalar(255, 0, 0));
                 Imgproc.putText(inputMat, ((Integer) currentContourSize.intValue()).toString(), currentContourLocation, 0, 0.5, new Scalar(255, 0, 0));
                 Imgproc.drawContours(inputMat, contours, i, new Scalar(0, 255, 0), 1);
@@ -118,8 +122,8 @@ public class FrameProcessor implements Runnable {
             RotatedRect maxRotatedRect = Imgproc.minAreaRect(maxContour2f);
             Rect maxRect = Imgproc.boundingRect(maxContour);
 
-            if (debug && display) {
-                drawCornerRect(inputMat, (int) (inputMat.size().width / 2), (int) (inputMat.size().height / 2), 100, 75, new Scalar(0, 0, 255), 1);
+            if (debug && display || debug && stream) {
+                //drawCornerRect(inputMat, (int) (inputMat.size().width / 2), (int) (inputMat.size().height / 2), 100, 75, new Scalar(0, 0, 255), 1);
                 Imgproc.putText(inputMat, "DEBUG", new Point(0, 25), 0, 1.0, new Scalar(255, 0, 0), 2);
                 Imgproc.putText(inputMat, String.valueOf(calcDepth(maxRotatedRect, targetSize, inputMat.size(), fieldOfView)), new Point(0, inputMat.size().height - 5), 0, 0.5, new Scalar(0, 0, 255));
                 Imgproc.drawContours(inputMat, contours, maxSizeIndex, new Scalar(0, 255, 0), 3);

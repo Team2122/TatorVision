@@ -2,42 +2,33 @@ package org.teamtators.vision;
 
 public class VisionConfig {
 
-    private String robotIPAddress;
-    private String networkTableName;
-    private String subTableName;
-    private int mjpegPortNumber;
-    private int frameDelay;
-    private double[] fieldOfView;
-    private double[] targetSize;
-    private int[] lowerThreshold;
-    private int[] upperThreshold;
-    private int minArea;
-    private int maxArea;
-    private float arcLengthPercentage;
-    private boolean display;
-    private boolean stream;
-    private boolean debug;
+    private String robotIPAddress = "roboRIO-2122-FRC.local";
+    private String networkTableName = "TatorVision";
+    private String subTableName = "relativeTarget";
+    private int mjpegPortNumber = 8080;
+    private int frameDelay = 30;
+
+    private int cameraIndex = 0;
+
+    private double[] fieldOfView = {100, 70};
+    private double[] targetSize = {20.0, 14.0};
+
+    private int[] lowerThreshold = {60, 150, 20};
+    private int[] upperThreshold = {100, 255, 255};
+    private int minArea = 1000;
+    private int maxArea = 100000;
+    private float arcLengthPercentage = 0.01f;
+
+    private boolean flipX = false;
+    private boolean display = false;
+    private boolean stream = true;
+    private boolean debug = false;
+
+    private double inputScale = 1.0;
+    private double streamScale = 1.0;
 
     public VisionConfig() {
 
-    }
-
-    public VisionConfig(String robotIPAddress, String networkTableName, String subTableName, int mjpegPortNumber, int frameDelay, double[] fieldOfView, double[] targetSize, int[] lowerThreshold, int[] upperThreshold, int minArea, int maxArea, float arcLengthPercentage, boolean display, boolean stream, boolean debug) {
-        this.robotIPAddress = robotIPAddress;
-        this.networkTableName = networkTableName;
-        this.subTableName = subTableName;
-        this.mjpegPortNumber = mjpegPortNumber;
-        this.frameDelay = frameDelay;
-        this.fieldOfView = fieldOfView;
-        this.targetSize = targetSize;
-        this.lowerThreshold = lowerThreshold;
-        this.upperThreshold = upperThreshold;
-        this.minArea = minArea;
-        this.maxArea = maxArea;
-        this.arcLengthPercentage = arcLengthPercentage;
-        this.display = display;
-        this.stream = stream;
-        this.debug = debug;
     }
 
     public String getRobotIPAddress() {
@@ -78,6 +69,14 @@ public class VisionConfig {
 
     public void setFrameDelay(int frameDelay) {
         this.frameDelay = frameDelay;
+    }
+
+    public int getCameraIndex() {
+        return cameraIndex;
+    }
+
+    public void setCameraIndex(int cameraIndex) {
+        this.cameraIndex = cameraIndex;
     }
 
     public double[] getFieldOfView() {
@@ -136,6 +135,14 @@ public class VisionConfig {
         this.arcLengthPercentage = arcLengthPercentage;
     }
 
+    public boolean getFlipX() {
+        return flipX;
+    }
+
+    public void setFlipX(boolean display) {
+        this.flipX = display;
+    }
+
     public boolean getDisplay() {
         return display;
     }
@@ -158,5 +165,21 @@ public class VisionConfig {
 
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    public double getInputScale() {
+        return inputScale;
+    }
+
+    public void setInputScale(double inputScale) {
+        this.inputScale = inputScale;
+    }
+
+    public double getStreamScale() {
+        return streamScale;
+    }
+
+    public void setStreamScale(double streamScale) {
+        this.streamScale = streamScale;
     }
 }

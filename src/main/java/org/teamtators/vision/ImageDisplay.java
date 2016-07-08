@@ -31,38 +31,42 @@ public class ImageDisplay extends JPanel implements MouseMotionListener {
     }
 
     public void displayImage(Image img) {
-        ImageIcon icon = new ImageIcon(img);
-        JFrame frame = new JFrame();
-        frame.setLayout(new FlowLayout());
-        frame.setSize(img.getWidth(null) + xImgPadding, img.getHeight(null) + yImgPadding);
-        JLabel lbl = new JLabel();
-        lbl.setIcon(icon);
-        frame.add(lbl);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        imageFrame = frame;
-        imageLabel = lbl;
-        lbl.addMouseMotionListener(this);
+        if (imageFrame != null && ((BufferedImage)img).getWidth() > 0 && ((BufferedImage)img).getHeight() > 0) {
+            ImageIcon icon = new ImageIcon(img);
+            JFrame frame = new JFrame();
+            frame.setLayout(new FlowLayout());
+            frame.setSize(img.getWidth(null) + xImgPadding, img.getHeight(null) + yImgPadding);
+            JLabel lbl = new JLabel();
+            lbl.setIcon(icon);
+            frame.add(lbl);
+            frame.setVisible(true);
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            imageFrame = frame;
+            imageLabel = lbl;
+            lbl.addMouseMotionListener(this);
+        }
     }
 
     public void displayImage(Mat matImg) {
-        Image img = Mat2BufferedImage(matImg);
-        ImageIcon icon = new ImageIcon(img);
-        JFrame frame = new JFrame();
-        frame.setLayout(new FlowLayout());
-        frame.setSize(img.getWidth(null) + xImgPadding, img.getHeight(null) + yImgPadding);
-        JLabel lbl = new JLabel();
-        lbl.setIcon(icon);
-        frame.add(lbl);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        imageFrame = frame;
-        imageLabel = lbl;
-        lbl.addMouseMotionListener(this);
+        if (imageFrame != null && matImg.size().width > 0 && matImg.size().height > 0) {
+            Image img = Mat2BufferedImage(matImg);
+            ImageIcon icon = new ImageIcon(img);
+            JFrame frame = new JFrame();
+            frame.setLayout(new FlowLayout());
+            frame.setSize(img.getWidth(null) + xImgPadding, img.getHeight(null) + yImgPadding);
+            JLabel lbl = new JLabel();
+            lbl.setIcon(icon);
+            frame.add(lbl);
+            frame.setVisible(true);
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            imageFrame = frame;
+            imageLabel = lbl;
+            lbl.addMouseMotionListener(this);
+        }
     }
 
     public void updateImage(BufferedImage img) {
-        if (imageFrame != null) {
+        if (imageFrame != null && img.getWidth() > 0 && img.getHeight() > 0) {
             imageFrame.setSize(img.getWidth(null) + xImgPadding, img.getHeight(null) + yImgPadding);
             ImageIcon icon = new ImageIcon(img);
             imageLabel.setIcon(icon);
@@ -70,7 +74,7 @@ public class ImageDisplay extends JPanel implements MouseMotionListener {
     }
 
     public void updateImage(Mat matImg) {
-        if (imageFrame != null) {
+        if (imageFrame != null && matImg.size().width > 0 && matImg.size().height > 0) {
             Image img = Mat2BufferedImage(matImg);
             imageFrame.setSize(img.getWidth(null) + xImgPadding, img.getHeight(null) + yImgPadding);
             ImageIcon icon = new ImageIcon(img);

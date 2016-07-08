@@ -7,6 +7,7 @@ apply plugin: 'application'
 
 repositories {
     flatDir {
+        //dirs 'config'
         dirs 'libs'
     }
 
@@ -17,30 +18,53 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
-    compile group: 'edu.wpi.first.wpilib.networktables.java', name: 'NetworkTables', version: '3.0.0-SNAPSHOT', classifier: 'desktop'
-    compile group: 'org.opencv', name: 'opencv-300'
-    runtime files('libs/libopencv_java300.dylib')
-    //compile files("/Users/Tavi/Documents/workspace/TatorVision/libs/libopencv_java300.dylib")
-    runtime group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.7.5'
-    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.7.5'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.7.5'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.7.5'
+sourceSets {
+    main {
+        resources {
+            srcDir 'config'
+            srcDir 'libs'
+        }
+    }
 }
 
-/*
-sourceSets {
-    main.java.srcDir "src/main/java"
-    main.resources.srcDir "src/main/libs"
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.6.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.6.1'
+
+    //compile group: 'edu.wpi.first.wpilib.networktables.java', name: 'NetworkTables', version: '3.0.0-SNAPSHOT', classifier: 'desktop'
+    //compile group: 'edu.wpi.first.wpilib.networktables.java', name: 'NetworkTables', version: '3.0.0-SNAPSHOT', classifier: 'arm'
+    compile group: 'edu.wpi.first.wpilib', name: 'ntcore'
+    files 'libs/libntcore.so'
+
+    compile group: 'org.opencv', name: 'opencv-310'
+
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.7.5'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.7.5'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.7.5'
+    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.7.5'
+
+    files 'config/log4j2.xml'
+    //files 'config/config.yaml'
 }
-*/
+
+mainClassName = 'org.teamtators.vision.Main'
 
 jar {
     manifest {
         attributes(
                 'Main-Class': 'org.teamtators.vision.Main',
-                'Class-Path': configurations.compile.collect { it.getName() }.join(':')
+                "Class-Path": configurations.compile.collect { it.getName() }.join(' ')
         )
+    }
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+uploadArchives {
+    repositories {
+        flatDir {
+            dirs 'jar'
+        }
     }
 }
