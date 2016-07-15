@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: edu.wpi.first.wpilib:ntcore:">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/libs/ntcore.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Gradle: org.opencv:opencv-310:">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/libs/opencv-310.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
