@@ -2,16 +2,17 @@ package org.teamtators.vision;
 
 public class VisionConfig {
 
-    private String robotIPAddress = "roboRIO-2122-FRC.local";
+    private String robotHost = "roboRIO-2122-FRC.local";
     private String networkTableName = "TatorVision";
-    private String subTableName = "relativeTarget";
+    private String visionDataSubTableName = "relativeTarget";
+    private String robotDataSubTableName = "robotMotion";
     private int mjpegPortNumber = 8080;
     private int frameDelay = 30;
 
     private int cameraIndex = 0;
+    private double[] fieldOfView = {62.2, 48.8};
 
-    private double[] fieldOfView = {100, 70};
-    private double[] targetSize = {20.0, 14.0};
+    private double[] correction = {0, 0};
 
     private int[] lowerThreshold = {60, 150, 20};
     private int[] upperThreshold = {100, 255, 255};
@@ -31,12 +32,12 @@ public class VisionConfig {
 
     }
 
-    public String getRobotIPAddress() {
-        return robotIPAddress;
+    public String getRobotHost() {
+        return robotHost;
     }
 
-    public void setRobotIPAddress(String robotIPAddress) {
-        this.robotIPAddress = robotIPAddress;
+    public void setRobotHost(String robotHost) {
+        this.robotHost = robotHost;
     }
 
     public String getNetworkTableName() {
@@ -47,12 +48,20 @@ public class VisionConfig {
         this.networkTableName = networkTableName;
     }
 
-    public String getSubTableName() {
-        return subTableName;
+    public String getVisionDataSubTableName() {
+        return visionDataSubTableName;
     }
 
-    public void setSubTableName(String subTableName) {
-        this.subTableName = subTableName;
+    public void setVisionDataSubTableName(String visionDataSubTableName) {
+        this.visionDataSubTableName = visionDataSubTableName;
+    }
+
+    public String getRobotDataSubTableName() {
+        return robotDataSubTableName;
+    }
+
+    public void setRobotDataSubTableName(String robotDataSubTableName) {
+        this.robotDataSubTableName = robotDataSubTableName;
     }
 
     public int getmjpegPortNumber() {
@@ -60,7 +69,7 @@ public class VisionConfig {
     }
 
     public void setmjpegPortNumber(int mjpegportNumber) {
-        this.mjpegPortNumber = this.mjpegPortNumber;
+        this.mjpegPortNumber = mjpegportNumber;
     }
 
     public int getFrameDelay() {
@@ -87,12 +96,12 @@ public class VisionConfig {
         this.fieldOfView = fieldOfView;
     }
 
-    public double[] getTargetSize() {
-        return targetSize;
+    public double[] getCorrection() {
+        return correction;
     }
 
-    public void setTargetSize(double[] targetSize) {
-        this.targetSize = targetSize;
+    public void setCorrection(double[] correction) {
+        this.correction = correction;
     }
 
     public int[] getLowerThreshold() {

@@ -31,7 +31,7 @@ public class ImageDisplay extends JPanel implements MouseMotionListener {
     }
 
     public void displayImage(Image img) {
-        if (imageFrame != null && ((BufferedImage)img).getWidth() > 0 && ((BufferedImage)img).getHeight() > 0) {
+        if (((BufferedImage) img).getWidth() > 0 && ((BufferedImage) img).getHeight() > 0) {
             ImageIcon icon = new ImageIcon(img);
             JFrame frame = new JFrame();
             frame.setLayout(new FlowLayout());
@@ -48,7 +48,7 @@ public class ImageDisplay extends JPanel implements MouseMotionListener {
     }
 
     public void displayImage(Mat matImg) {
-        if (imageFrame != null && matImg.size().width > 0 && matImg.size().height > 0) {
+        if (matImg.size().width > 0 && matImg.size().height > 0) {
             Image img = Mat2BufferedImage(matImg);
             ImageIcon icon = new ImageIcon(img);
             JFrame frame = new JFrame();

@@ -2,17 +2,23 @@ package org.teamtators.vision;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
+import edu.wpi.first.wpilibj.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.tables.ITable;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 
 public class FrameProcessor implements Runnable {
-    private ArrayList<Mat> inputMatQueue = new ArrayList<Mat>();
-    private ArrayList<Point> outputTargetQueue = new ArrayList<Point>();
+    //TODO reimplement using a LinkedBlockingQueue<E>
+    private ArrayList<Mat> inputMatQueue = new ArrayList<>();
+    private ArrayList<Point> outputTargetQueue = new ArrayList<>();
     Mat erodeKernel = Imgproc.getStructuringElement(Imgproc.MORPH_ERODE, new Size(2.0, 2.0));
     Mat dilateKernel = Imgproc.getStructuringElement(Imgproc.MORPH_DILATE, new Size(2.0, 2.0));
 
+    private NetworkTable networkTable;
+    private ITable robotDataTable;
+
     private Size fieldOfView;
-    private Size targetSize;
     private Scalar lowerThreshold;
     private Scalar upperThreshold;
     private int minArea;
@@ -22,15 +28,15 @@ public class FrameProcessor implements Runnable {
     private boolean stream;
     private boolean debug;
 
+    private int timeMarker;
+
     public FrameProcessor(VisionConfig configData) {
         applyConfig(configData);
     }
 
     private void applyConfig(VisionConfig configData) {
         double[] fieldOfViewArray = configData.getFieldOfView();
-        double[] targetSizeArray = configData.getTargetSize();
         fieldOfView = new Size(fieldOfViewArray[0], fieldOfViewArray[1]);
-        targetSize = new Size(targetSizeArray[0], targetSizeArray[1]);
         int[] lowerThresholdArray = configData.getLowerThreshold();
         int[] upperThresholdArray = configData.getUpperThreshold();
         lowerThreshold = new Scalar(lowerThresholdArray[0], lowerThresholdArray[1], lowerThresholdArray[2]);
@@ -53,10 +59,10 @@ public class FrameProcessor implements Runnable {
 
     public Point process(Mat inputMat) {
 
-        if(inputMat == null) return new Point(-1, -1);
+        if (inputMat == null) return new Point(-1, -1);
 
         //here we will write any debug info if necessary onto inputMat (displayed in the main thread) and work on a copy of it
-        Mat workingMat = null;
+        Mat workingMat;
         if (display || stream) {
             workingMat = new Mat();
             inputMat.copyTo(workingMat);
@@ -71,9 +77,9 @@ public class FrameProcessor implements Runnable {
         //Imgproc.dilate(workingMat, workingMat, dilateKernel, new Point(0.0, 0.0), 2);
 
         Mat hierarchy = new Mat();
-        ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-        ArrayList<Double> contourSizes = new ArrayList<Double>();
-        ArrayList<Point> contourLocations = new ArrayList<Point>();
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
+        ArrayList<Double> contourSizes = new ArrayList<>();
+        ArrayList<Point> contourLocations = new ArrayList<>();
         Imgproc.findContours(workingMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_TC89_L1);
 
 
@@ -115,69 +121,76 @@ public class FrameProcessor implements Runnable {
             }
         }
 
+        if (debug && (display || stream)) {
+            Imgproc.putText(inputMat, "DEBUG", new Point(0, 25), 0, 1.0, new Scalar(255, 0, 0), 2);
+        }
+
+        //Calculate largest contour position
         if (contours.size() > 0) {
+            Point target;
+            //Point correction;
+            Point correction = new Point(0, 0);
             MatOfPoint maxContour = contours.get(maxSizeIndex);
             MatOfPoint2f maxContour2f = new MatOfPoint2f();
             maxContour.convertTo(maxContour2f, CvType.CV_32FC2);
             RotatedRect maxRotatedRect = Imgproc.minAreaRect(maxContour2f);
             Rect maxRect = Imgproc.boundingRect(maxContour);
 
-            if (debug && display || debug && stream) {
-                //drawCornerRect(inputMat, (int) (inputMat.size().width / 2), (int) (inputMat.size().height / 2), 100, 75, new Scalar(0, 0, 255), 1);
-                Imgproc.putText(inputMat, "DEBUG", new Point(0, 25), 0, 1.0, new Scalar(255, 0, 0), 2);
-                Imgproc.putText(inputMat, String.valueOf(calcDepth(maxRotatedRect, targetSize, inputMat.size(), fieldOfView)), new Point(0, inputMat.size().height - 5), 0, 0.5, new Scalar(0, 0, 255));
+
+            target = new Point(toDegrees((int) (maxRotatedRect.center.x - inputMat.size().width / 2), (int) inputMat.size().width, fieldOfView.width), 0);
+            outputTargetQueue.add(target);
+
+            //Draw debug data
+            if (debug && (display || stream)) {
+                //drawCornerRect(inputMat, (int) (inputMat.size().width / 2), (int) (inputMat.size().height / 2), 25, 25, new Scalar(0, 0, 255), 1);
+                //Imgproc.putText(inputMat, String.valueOf(calcDistance(maxRotatedRect, targetSize, inputMat.size(), fieldOfView)), new Point(0, inputMat.size().height - 5), 0, 0.5, new Scalar(0, 0, 255));
                 Imgproc.drawContours(inputMat, contours, maxSizeIndex, new Scalar(0, 255, 0), 3);
-                if (contours.size() > 0) {
-                    if ((maxRotatedRect.center.x) < inputMat.size().width / 2) {
-                        Imgproc.putText(inputMat, "->", new Point(0, 480 / 2), 0, 3.0, new Scalar(0, 0, 255), 5);
-                    } else {
-                        Imgproc.putText(inputMat, "<-", new Point(480, 480 / 2), 0, 3.0, new Scalar(0, 0, 255), 5);
-                    }
-
-                    Imgproc.line(inputMat, new Point(640 / 2, 0), new Point(640 / 2, 480), new Scalar(0, 0, 255));
-                }
             }
-
-            return new Point(45, Imgproc.minAreaRect(maxContour2f).center.x - inputMat.size().width / 2);
+            drawCornerRect(inputMat, new Point(inputMat.size().width / 2 + correction.x, inputMat.size().height / 2 + correction.y), 25, 25, new Scalar(0, 0, 255), 1);   //to be replaced with corrected targeting values
+            Imgproc.line(inputMat, new Point(0, inputMat.size().height / 2 + correction.y), new Point(inputMat.size().width, inputMat.size().height / 2 + correction.y), new Scalar(0, 0, 255));
+            Imgproc.line(inputMat, new Point(inputMat.size().width / 2 + correction.x, 0), new Point(inputMat.size().width / 2 + correction.x, inputMat.size().height), new Scalar(0, 0, 255));
+            return target;
         }
+        drawCornerRect(inputMat, new Point(inputMat.size().width / 2, inputMat.size().height / 2), 25, 25, new Scalar(0, 0, 255), 1);
+        Imgproc.line(inputMat, new Point(0, inputMat.size().height / 2), new Point(inputMat.size().width, inputMat.size().height / 2), new Scalar(0, 0, 255));
+        Imgproc.line(inputMat, new Point(inputMat.size().width / 2, 0), new Point(inputMat.size().width / 2, inputMat.size().height), new Scalar(0, 0, 255));
         return null;
     }
 
-    private double calcDepth(Rect target, Size targetSize, Size pixelDimensions, Size fov) {
-        double widthAngle = (target.size().width / 2) * (fov.width / pixelDimensions.width);
-        double heightAngle = (target.size().height / 2) * (pixelDimensions.height / fov.height);
-
-        double xDistance = (targetSize.width / 2) / Math.tan(widthAngle * Math.PI / 180);
-        double yDistance = (targetSize.height / 2) / Math.tan(heightAngle * Math.PI / 180);
-        System.out.println("X width: " + target.size().width + "\tDistance: " + xDistance);
-        System.out.println("Y height: " + target.size().height + "\tDistance: " + yDistance);
-        System.out.println("Average: \t\t\t\t  " + (int) ((xDistance + yDistance) / 2));
-        System.out.println();
-
-        return (xDistance + yDistance) / 2;
+    //TODO decide whether or not to move distance / correction calculation to the robot (comparably light calculations) instead of publishing robot data to network tables
+    private double calcDistance(double deltaRobotDistance, double deltaTargetTheta, double deltaRobotCentripetalDistance) {
+        return (deltaRobotDistance / deltaTargetTheta) - deltaRobotCentripetalDistance;
     }
 
-    private double calcDepth(RotatedRect target, Size targetSize, Size pixelDimensions, Size fov) {
-        double widthAngle = (target.size.width / 2) * (fov.width / pixelDimensions.width);
-        double heightAngle = (target.size.height / 2) * (pixelDimensions.height / fov.height);
-
-        double xDistance = (targetSize.width / 2) / Math.tan(widthAngle * Math.PI / 180);
-        double yDistance = (targetSize.height / 2) / Math.tan(heightAngle * Math.PI / 180);
-
-        return (xDistance + yDistance) / 2;
+    private double calcCorrection(double deltaRobotDistance, double targetDistance) {
+        return deltaRobotDistance / targetDistance;
     }
 
-    private void drawCornerRect(Mat image, int xpos, int ypos, int width, int height, Scalar color, int thickness) {
-        int centerX = xpos;
-        int centerY = ypos;
-        int upperRightX = centerX + width / 2;
-        int upperRightY = centerY - height / 2;
-        int upperLeftX = centerX - width / 2;
-        int upperLeftY = centerY - height / 2;
-        int lowerRightX = centerX + width / 2;
-        int lowerRightY = centerY + height / 2;
-        int lowerLeftX = centerX - width / 2;
-        int lowerLeftY = centerY + height / 2;
+    private double calcCorrection(double deltaRobotDistance, double deltaTargetTheta, double deltaRobotCentripetalDistance) {
+        return deltaRobotDistance / calcDistance(deltaRobotDistance, deltaTargetTheta, deltaRobotCentripetalDistance);
+    }
+
+    private Point separateVector(double scalar, double angle) {
+        return new Point(scalar * Math.sin(Math.toRadians(angle)), scalar * Math.sin(Math.toRadians(angle + 90.0)));
+    }
+
+    private double toDegrees(int pixels, int resolution, double fov) {
+        return ((double) pixels / (double) resolution) * fov;
+    }
+
+    private double toPixels(double degrees, int resolution, double fov) {
+        return (degrees / fov) * resolution;
+    }
+
+    private void drawCornerRect(Mat image, Point center, int width, int height, Scalar color, int thickness) {
+        int upperRightX = (int) center.x + width / 2;
+        int upperRightY = (int) center.y - height / 2;
+        int upperLeftX = (int) center.x - width / 2;
+        int upperLeftY = (int) center.y - height / 2;
+        int lowerRightX = (int) center.x + width / 2;
+        int lowerRightY = (int) center.y + height / 2;
+        int lowerLeftX = (int) center.x - width / 2;
+        int lowerLeftY = (int) center.y + height / 2;
         Imgproc.line(image, new Point(upperRightX, upperRightY), new Point(upperRightX - width / 4, upperRightY), color, thickness);
         Imgproc.line(image, new Point(upperRightX, upperRightY), new Point(upperRightX, upperRightY + height / 4), color, thickness);
 

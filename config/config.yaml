@@ -1,22 +1,28 @@
-robotIPAddress: "roboRIO-2122-FRC.local"
+#robotHost: "roboRIO-2122-FRC.local"
+robotHost: "127.0.0.1"
 networkTableName: "TatorVision"
-subTableName: "relativeTarget"
+visionDataSubTableName: "relativeTarget"
+robotDataSubTableName:  "robotMotion"
 mjpegPortNumber:  8080
 frameDelay: 30  #prevents flooding the network with MJPEG data, 30 = a little over 30 fps
 
 cameraIndex:  0 #use 0 for first/only camera (use 1 for testing external camera on computer with webcam)
+fieldOfView:  [120.0, 70.0]  #camera field of view [x, y] in degrees
+#fieldOfView:  [62.2, 48.8]  #FOV of RPI Camera Module
+
+correction:  [0.0, 0.0]  #angle correction [x, y] in degrees
 
 #lowerThreshold: [60, 100, 100]  #Thresholds are in HSV format
 #upperThreshold: [100, 255, 255]
-lowerThreshold: [0, 0, 100]  #Thresholds are in HSV format
-upperThreshold: [255, 200, 255]
+lowerThreshold: [40, 120, 100]  #Thresholds are in HSV format
+upperThreshold: [120, 255, 255]
 minArea: 1000
 maxArea: 100000 #about 1/3 of the screen size (640x480), does not correspond to # of pixels
 arcLengthPercentage:  0.01 #determines how much to simplify contours
 
 flipX:  true  #flip image from left to right
-display:  false  #display an image on screen
+display:  true  #display an image on screen
 stream: true  #stream MJPEG data
-debug:  false  #show debug info on screen/stream
+debug:  true  #show debug info on screen/stream
 inputScale:  1.0  #software scale on input frame
-streamScale:  1.0 #software scale on stream image (computed after outputScale)ption
+streamScale:  0.5 #software scale on stream image (computed after outputScale)ption

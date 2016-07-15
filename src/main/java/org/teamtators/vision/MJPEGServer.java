@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.awt.image.BufferedImage;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.wpi.first.wpilibj.networktables.*;
 import edu.wpi.first.wpilibj.tables.ITable;
@@ -16,14 +17,12 @@ public class MJPEGServer implements Runnable {
     private InetAddress clientAddress;
     private int portNumber;
     private DataOutputStream out;
-    //private BufferedReader in;
 
-    private List<byte[]> imageByteList;
-    private List<BufferedImage> imageQueue;
+    private Queue<BufferedImage> imageQueue;
 
     public MJPEGServer(int portNumber) {
         this.portNumber = portNumber;
-        imageQueue = new ArrayList<BufferedImage>();
+        imageQueue = new LinkedBlockingQueue<>();
     }
 
     private void init() {
@@ -33,7 +32,6 @@ public class MJPEGServer implements Runnable {
             clientAddress = clientSocket.getInetAddress();
             System.out.println("Connected to: " + clientAddress);
             out = new DataOutputStream(clientSocket.getOutputStream());
-            //in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             out.write((
                 "HTTP/1.0 200 OK\r\n" +
@@ -45,7 +43,7 @@ public class MJPEGServer implements Runnable {
                         //"Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0\r\n" +
                         "Pragma: no-cache\r\n" +
                         "Content-Type: multipart/x-mixed-replace; " +
-                        "boundary=--JPEG_BOUNDARY\r\n\r\n").getBytes());
+                        "boundary=--JPEG_BOUNDARY\r\n\r\n").getBytes());    //"--JPEG_BOUNDARY just needs to be consistent with the boundary string used when writing new frames
             out.flush();
             System.out.println("MJPEG Server Initialized");
         } catch (java.io.IOException e) {
@@ -58,16 +56,20 @@ public class MJPEGServer implements Runnable {
         init();
 
         while (true) {
+
+            /*
             try {
                 Thread.sleep(0);    //For some reason, the thread hangs if no code executes here
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            */
+
             if (imageQueue.size() > 0) {
-                if (imageQueue.get(0) != null) {
+                if (imageQueue.peek() != null) {
                     try {
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8192 * 4);
-                        ImageIO.write(imageQueue.remove(0), "jpg", byteArrayOutputStream);
+                        ImageIO.write(imageQueue.poll(), "jpg", byteArrayOutputStream);
                         byte[] data = byteArrayOutputStream.toByteArray();
 
                         out.write((

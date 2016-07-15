@@ -1,7 +1,6 @@
 package org.teamtators.vision;
 
 import java.io.*;
-import java.lang.reflect.Field;
 
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.tables.ITable;
@@ -34,7 +33,7 @@ public class Main {
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         logger.info("Loading Native Library");
-        if (argParser.getNativeLibrary() != "") {
+        if (!argParser.getNativeLibrary().equals("")) {
             File nativeLibFile = new File(".");
             String nativeLibraryPath = argParser.getNativeLibrary();
             try {
@@ -102,6 +101,7 @@ public class Main {
             mainWindow = new ImageDisplay(frame);
         }
 
+        /*
         //load NetworkTable native library
         File temp = null;
         try {
@@ -150,17 +150,24 @@ public class Main {
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
+        */
 
         //Initialize NetworkTable server
-        NetworkTable.setServerMode();
-        NetworkTable.setIPAddress(configData.getRobotIPAddress());
-        NetworkTable networkTable = NetworkTable.getTable(configData.getNetworkTableName());
-        ITable subTable = networkTable.getSubTable(configData.getSubTableName());
+        NetworkTable.setClientMode();
+        //NetworkTable.setTeam(2122);
+        NetworkTable.setIPAddress(configData.getRobotHost());
+        NetworkTable.initialize();
+        NetworkTable table = null;
+        ITable visionSubTable = null;
 
         //Initialize MJPEG stream server
-        MJPEGServer mjpegServer = new MJPEGServer(configData.getmjpegPortNumber());
-        Thread serverThread = new Thread(mjpegServer);
-        serverThread.start();
+        MJPEGServer mjpegServer = null;
+        Thread serverThread;
+        if (configData.getStream()) {
+            mjpegServer = new MJPEGServer(configData.getmjpegPortNumber());
+            serverThread = new Thread(mjpegServer);
+            serverThread.start();
+        }
 
         //Initialize FrameProcessor Thread
         Thread frameProcessorThread = new Thread(frameProcessor);
@@ -170,6 +177,20 @@ public class Main {
         long lastTimeMarker = System.currentTimeMillis();
 
         while (true) {
+
+            if (NetworkTable.connections().length > 0) {
+                if (table == null) {
+                    logger.debug("Creating Network Tables");
+                    table = NetworkTable.getTable(configData.getNetworkTableName());
+                    visionSubTable = table.getSubTable(configData.getVisionDataSubTableName());
+                    logger.debug("Main Table: " + table);
+                    logger.debug("Vision Subtable: " + table);
+                }
+            } else {
+                table = null;
+                visionSubTable = null;
+            }
+
             videoCapture.read(frame);
             if (configData.getInputScale() > 1.0) {
                 Imgproc.pyrUp(frame, frame, new Size(configData.getInputScale(), configData.getInputScale()));
@@ -180,24 +201,31 @@ public class Main {
             }
 
             if (configData.getFlipX()) {
-                Core.flip(frame, frame, 1); //flip on x axis to look like a mirror
+                Core.flip(frame, frame, 1); //flip on x axis to look like a mirror (less confusing for testing w/ laptop webcam)
             }
 
             if (frameProcessor.getInputMatQueueSize() < 10) {
                 frameProcessor.process(frame);
             }
 
-            if (System.currentTimeMillis() - lastTimeMarker > configData.getFrameDelay() && mjpegServer.getQueueLength() < 10) {
+            if (configData.getStream() && System.currentTimeMillis() - lastTimeMarker > configData.getFrameDelay() && mjpegServer.getQueueLength() < 10) {
                 Mat streamFrame = frame.clone();
-                Imgproc.pyrDown(streamFrame, streamFrame, new Size(0.5, 0.5));
+                if (configData.getStreamScale() > 1.0) {
+                    Imgproc.pyrUp(streamFrame, streamFrame, new Size(configData.getStreamScale(), configData.getStreamScale()));
+                }
+
+                if (configData.getStreamScale() < 1.0) {
+                    Imgproc.pyrDown(streamFrame, streamFrame, new Size(configData.getStreamScale(), configData.getStreamScale()));
+                }
                 mjpegServer.queueImage(ImageDisplay.Mat2BufferedImage(streamFrame));
                 lastTimeMarker = System.currentTimeMillis();
             }
 
-            if (frameProcessor.getTargetQueueSize() > 0) {
+            if (frameProcessor.getTargetQueueSize() > 0 && table != null && visionSubTable != null) {
+                //logger.trace("Putting values to table");
                 Point target = frameProcessor.getTarget();
-                subTable.putNumber("x", target.x);
-                subTable.putNumber("y", target.y);
+                visionSubTable.putNumber("x", target.x);
+                visionSubTable.putNumber("y", target.y);
             }
 
             if (configData.getDisplay()) {
@@ -215,9 +243,9 @@ public class Main {
         } else {
             logger.trace("Searching in: " + searchFile.getName());
             File[] files = searchFile.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                String searchResult = searchForFile(files[i], searchName);
-                if (searchResult != "") return searchResult;
+            for (File file : files) {
+                String searchResult = searchForFile(file, searchName);
+                if (!searchResult.equals("")) return searchResult;
             }
         }
 
@@ -234,10 +262,6 @@ public class Main {
         }
         */
 
-        if (regexArray.length == 0) {   //for some reason, valid regex matches have 0 elements
-            return true;
-        }
-
-        return false;
+        return regexArray.length == 0;
     }
 }
