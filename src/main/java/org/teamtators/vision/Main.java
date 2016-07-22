@@ -16,23 +16,30 @@ import org.apache.logging.log4j.*;
 public class Main {
     private static final Logger logger = LogManager.getRootLogger();
 
+    /**
+     * Main class
+     * @param args Program Arguments
+     */
     public static void main(String[] args) {
 
         System.out.println(
                 "\n" +
                         "┌─────────────────────────────┐\n" +
                         "│╺┳╸┏━┓╺┳╸┏━┓┏━┓╻ ╻╻┏━┓╻┏━┓┏┓╻│\n" +
-                        "| ┃ ┣━┫ ┃ ┃ ┃┣┳┛┃┏┛┃┗━┓┃┃ ┃┃┗┫│\n" +
+                        "│ ┃ ┣━┫ ┃ ┃ ┃┣┳┛┃┏┛┃┗━┓┃┃ ┃┃┗┫│\n" +
                         "│ ╹ ╹ ╹ ╹ ┗━┛╹┗╸┗┛ ╹┗━┛╹┗━┛╹ ╹│\n" +
                         "└─────────────────────────────┘\n");
 
         ArgumentParser argParser = new ArgumentParser(args);
+
+        //NativeUtils.loadLibraryFromJar("/");
 
         logger.info("Using OpenCV Version: " + Core.VERSION);
         logger.info("Native Library: " + Core.NATIVE_LIBRARY_NAME);
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         logger.info("Loading Native Library");
+        //search for native library (currently searches in arg specified path and command line working directory)
         if (!argParser.getNativeLibrary().equals("")) {
             File nativeLibFile = new File(".");
             String nativeLibraryPath = argParser.getNativeLibrary();
@@ -44,19 +51,22 @@ public class Main {
                     logger.debug("Native Library Path: " + nativeLibraryPath);
                     System.load(nativeLibraryPath);
                 } catch (UnsatisfiedLinkError e2) {
-                    nativeLibraryPath = searchForFile(nativeLibFile, argParser.getNativeLibrary());
+                    nativeLibraryPath = searchForLibrary(nativeLibFile, argParser.getNativeLibrary());
                     System.load(nativeLibraryPath);
                 }
             }
         } else {
             try {
                 String nativeLibrary = "lib" + Core.NATIVE_LIBRARY_NAME;
-                nativeLibrary = searchForFile(new File("."), nativeLibrary);
+                logger.debug("Native Library Path:" + nativeLibrary);
+                nativeLibrary = searchForLibrary(new File("."), nativeLibrary);
+                logger.debug("Native Library Path:" + nativeLibrary);
                 System.load(nativeLibrary);
                 logger.info("Native Library Loaded");
                 System.out.println();
             } catch (UnsatisfiedLinkError e) {
                 e.printStackTrace();
+                System.exit(1);
             }
         }
 
@@ -65,6 +75,7 @@ public class Main {
 
         //System.load("/usr/local/Cellar/opencv3/3.1.0+3/share/OpenCV/java/libopencv+java310.so");    //for some reason intellij can't recognise libopencv+java310.so
 
+        //Load YAML mapper and attempt to copy config parsed config values into a new VisionConfig object
         if (args.length > 0) {
             logger.info("Creating YAML Mapper");
             ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
@@ -87,9 +98,10 @@ public class Main {
         }
 
         //Initialize Video Capture
+        //Runtime.getRuntime().exec(/*v4lctl setup commands*/);
         VideoCapture videoCapture = new VideoCapture();
         //TODO: Test if CAP_PROP_EXPOSURE modifies USB webcam settings
-        videoCapture.set(Videoio.CAP_PROP_EXPOSURE, 0.5);
+        videoCapture.set(Videoio.CAP_PROP_EXPOSURE, 2);
         videoCapture.open(configData.getCameraIndex());
 
         //Populate and display originalImage
@@ -100,57 +112,6 @@ public class Main {
         if (configData.getDisplay()) {
             mainWindow = new ImageDisplay(frame);
         }
-
-        /*
-        //load NetworkTable native library
-        File temp = null;
-        try {
-            InputStream in = Main.class.getResourceAsStream("/libntcore.so");
-            if (in == null) throw new IOException();
-            byte[] buffer = new byte[1024];
-            int read = -1;
-            temp = File.createTempFile("/libntcore.so", "");
-            FileOutputStream fos = new FileOutputStream(temp);
-
-            //logger.trace("in: " + in);
-            while ((read = in.read(buffer)) != -1) {
-                fos.write(buffer, 0, read);
-            }
-            fos.close();
-            in.close();
-        } catch (IOException e) {
-            logger.warn("Failed to find ntcore", e);
-        }
-
-        System.load(temp.getAbsolutePath());
-
-        try {
-            // This enables the java.library.path to be modified at runtime
-            // From a Sun engineer at http://forums.sun.com/thread.jspa?threadID=707176
-            //
-            Field field = ClassLoader.class.getDeclaredField("usr_paths");
-            field.setAccessible(true);
-            String[] paths = (String[]) field.get(null);
-            for (int i = 0; i < paths.length; i++) {
-                if (temp.getAbsolutePath().equals(paths[i])) {
-                    return;
-                }
-            }
-            String[] tmp = new String[paths.length + 1];
-            System.arraycopy(paths, 0, tmp, 0, paths.length);
-            tmp[paths.length] = temp.getAbsolutePath();
-            field.set(null, tmp);
-            System.setProperty("java.library.path", System.getProperty("java.library.path") + File.pathSeparator + temp.getAbsolutePath());
-            Field fieldSysPath = null;
-            fieldSysPath = ClassLoader.class.getDeclaredField("sys_paths");
-            fieldSysPath.setAccessible(true);
-            fieldSysPath.set(null, null);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        */
 
         //Initialize NetworkTable server
         NetworkTable.setClientMode();
@@ -234,17 +195,25 @@ public class Main {
         }
     }
 
-    private static String searchForFile(File searchFile, String searchName) {
+    /**
+     * Searches for a file recursively given a regular expression (for file extension) and a naome comparison stream
+     * @param searchFile path to search for file in
+     * @param searchName
+     * @param regex
+     * @return returns absolute path of found file or "" if no file was found
+     */
+    private static String searchForFile(File searchFile, String searchName, String regex) {
         if (searchFile.isFile()) {
-            logger.trace("\tChecking: " + searchFile.getName());
-            if (isLibraryFile(searchFile) && searchFile.getName().contains(searchName)) {   //for some reason, valid regex matches have 0 elements
+            logger.trace("Checking:\t\t" + searchFile.getName());
+            if (checkRegex(searchFile.getAbsolutePath(), regex) && searchFile.getName().contains(searchName)) {   //for some reason, valid regex matches have 0 elements
                 return searchFile.getAbsolutePath();
             }
         } else {
-            logger.trace("Searching in: " + searchFile.getName());
+            if(logger.getLevel().equals(Level.TRACE)) System.out.println();
+            logger.trace("Searching:\t" + searchFile.getPath());
             File[] files = searchFile.listFiles();
             for (File file : files) {
-                String searchResult = searchForFile(file, searchName);
+                String searchResult = searchForFile(file, searchName, regex);
                 if (!searchResult.equals("")) return searchResult;
             }
         }
@@ -252,16 +221,34 @@ public class Main {
         return "";
     }
 
-    private static boolean isLibraryFile(File file) {
-        String[] regexArray = file.getName().split(".*((\\.jnilib)|(\\.dylib)|(\\.dll)|(\\.so))");
+    /**
+     * Searches for a native library file recursively (.jnilib, .dylib, .dll, .so)
+     * @param searchFile path to search for library in
+     * @param searchName name to compare libraries to for matches
+     * @return absolute file path of found library or "" if no library was found
+     */
+    private static String searchForLibrary(File searchFile, String searchName) {
+        return searchForFile(searchFile, searchName, ".*((\\.jnilib)|(\\.dylib)|(\\.dll)|(\\.so))");
+    }
 
-        /*
-        logger.debug("\t\tRegex Array:");
-        for(int i = 0; i < regexArray.length; i++) {
-            logger.debug("\t\t\t[" + i + "] " + regexArray[i]);
-        }
-        */
+    /**
+     * Searches for a YAML file recursively
+     * @param searchFile path to search for YAML file in
+     * @param searchName name to compare YAML files to for matches
+     * @return absolute file path of found YAML file or "" if no YAML file was found
+     */
+    private static String searchForYaml(File searchFile, String searchName) {
+        return searchForFile(searchFile, searchName, "((\\.yml)|(\\.yaml))");
+    }
 
+    /**
+     * Checks if a String matches a given regular expression
+     * @param string the String to match with
+     * @param regex the regular expression to match against
+     * @return whether or not the String matches the regular expression
+     */
+    private static boolean checkRegex(String string, String regex) {
+        String[] regexArray = string.split(regex);
         return regexArray.length == 0;
     }
 }

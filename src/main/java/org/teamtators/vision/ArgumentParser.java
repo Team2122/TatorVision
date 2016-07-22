@@ -6,10 +6,18 @@ import java.util.List;
 public class ArgumentParser {
     private List<String> argsList;
 
+    /**
+     * Constructor with argument[]
+     * @param args argument array
+     */
     public ArgumentParser(String[] args) {
         argsList = Arrays.asList(args);
     }
 
+    /**
+     * Get configuration option
+     * @return configuration option (should be a filepath)
+     */
     public String getConfigFile() {
         int index;
         index = argsList.indexOf("--config") + 1;
@@ -23,6 +31,10 @@ public class ArgumentParser {
         return "";
     }
 
+    /**
+     * Get native library option
+     * @return native library option (should be a filepath)
+     */
     public String getNativeLibrary() {
         int index;
         index = argsList.indexOf("--native-library") + 1;
