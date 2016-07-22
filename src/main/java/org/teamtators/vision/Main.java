@@ -34,46 +34,17 @@ public class Main {
 
         //NativeUtils.loadLibraryFromJar("/");
 
-        logger.info("Using OpenCV Version: " + Core.VERSION);
-        logger.info("Native Library: " + Core.NATIVE_LIBRARY_NAME);
-        //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        logger.info("Using OpenCV Version: {}", Core.VERSION);
 
-        logger.info("Loading Native Library");
-        //search for native library (currently searches in arg specified path and command line working directory)
-        if (!argParser.getNativeLibrary().equals("")) {
-            File nativeLibFile = new File(".");
-            String nativeLibraryPath = argParser.getNativeLibrary();
-            try {
-                logger.debug("Native Library Path: " + nativeLibraryPath);
-                System.load(nativeLibraryPath);
-            } catch (UnsatisfiedLinkError e1) {
-                try {
-                    logger.debug("Native Library Path: " + nativeLibraryPath);
-                    System.load(nativeLibraryPath);
-                } catch (UnsatisfiedLinkError e2) {
-                    nativeLibraryPath = searchForLibrary(nativeLibFile, argParser.getNativeLibrary());
-                    System.load(nativeLibraryPath);
-                }
-            }
-        } else {
-            try {
-                String nativeLibrary = "lib" + Core.NATIVE_LIBRARY_NAME;
-                logger.debug("Native Library Path:" + nativeLibrary);
-                nativeLibrary = searchForLibrary(new File("."), nativeLibrary);
-                logger.debug("Native Library Path:" + nativeLibrary);
-                System.load(nativeLibrary);
-                logger.info("Native Library Loaded");
-                System.out.println();
-            } catch (UnsatisfiedLinkError e) {
-                e.printStackTrace();
-                System.exit(1);
-            }
-        }
+        String opencvJavaDir = System.getProperty("tatorvision.opencvjavadir");
+        if (opencvJavaDir == null)
+            opencvJavaDir = "/usr/local/share/OpenCV/java";
+        String opencvLib = String.format("%s/lib%s.so", opencvJavaDir, Core.NATIVE_LIBRARY_NAME);
+        logger.info("Loading native library: {}", opencvLib);
+        System.load(opencvLib);
 
         VisionConfig configData = new VisionConfig();
         FrameProcessor frameProcessor;
-
-        //System.load("/usr/local/Cellar/opencv3/3.1.0+3/share/OpenCV/java/libopencv+java310.so");    //for some reason intellij can't recognise libopencv+java310.so
 
         //Load YAML mapper and attempt to copy config parsed config values into a new VisionConfig object
         if (args.length > 0) {
@@ -115,7 +86,6 @@ public class Main {
 
         //Initialize NetworkTable server
         NetworkTable.setClientMode();
-        //NetworkTable.setTeam(2122);
         NetworkTable.setIPAddress(configData.getRobotHost());
         NetworkTable.initialize();
         NetworkTable table = null;

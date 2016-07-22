@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/TatorVision.iml" filepath="$PROJECT_DIR$/TatorVision.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/TatorVision.iml" filepath="$PROJECT_DIR$/.idea/modules/TatorVision.iml" />
     </modules>
   </component>
 </project>

@@ -3,11 +3,12 @@ version '1.0'
 
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: 'application'
+
+def openCVJavaDir = '/usr/local/share/OpenCV/java'
 
 repositories {
     flatDir {
-        dirs '/usr/local/share/OpenCV/java'
+        dirs openCVJavaDir
     }
 
     maven {
@@ -35,7 +36,7 @@ dependencies {
     compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.7.5'
 }
 
-mainClassName = 'org.teamtators.vision.Main'
+def mainClassName = 'org.teamtators.vision.Main'
 
 jar {
     manifest {
@@ -53,4 +54,11 @@ uploadArchives {
             dirs 'jar'
         }
     }
+}
+
+task run(type: JavaExec) {
+    main = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+
+    systemProperty "tatorvision.opencvjavadir", openCVJavaDir
 }
