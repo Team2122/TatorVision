@@ -1,8 +1,21 @@
+buildscript {
+    ext.kotlin_version = '1.0.3'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
 group 'org.teamtators.vision'
 version '1.0'
 
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'kotlin'
 
 def openCVJavaDir = '/usr/local/share/OpenCV/java'
 
@@ -34,6 +47,7 @@ dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.7.5'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.7.5'
     compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.7.5'
+    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.7.5'
 }
 
 def mainClassName = 'org.teamtators.vision.Main'

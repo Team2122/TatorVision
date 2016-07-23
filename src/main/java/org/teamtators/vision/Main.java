@@ -2,6 +2,7 @@ package org.teamtators.vision;
 
 import java.io.*;
 
+import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.tables.ITable;
 import org.opencv.core.*;
@@ -15,65 +16,38 @@ import org.apache.logging.log4j.*;
 
 public class Main {
     private static final Logger logger = LogManager.getRootLogger();
+    private static final String TATORVISION_HEADER = "\n" +
+            "┌─────────────────────────────┐\n" +
+            "│╺┳╸┏━┓╺┳╸┏━┓┏━┓╻ ╻╻┏━┓╻┏━┓┏┓╻│\n" +
+            "│ ┃ ┣━┫ ┃ ┃ ┃┣┳┛┃┏┛┃┗━┓┃┃ ┃┃┗┫│\n" +
+            "│ ╹ ╹ ╹ ╹ ┗━┛╹┗╸┗┛ ╹┗━┛╹┗━┛╹ ╹│\n" +
+            "└─────────────────────────────┘\n";
 
-    /**
-     * Main class
-     * @param args Program Arguments
-     */
     public static void main(String[] args) {
+        logger.info(TATORVISION_HEADER);
 
-        System.out.println(
-                "\n" +
-                        "┌─────────────────────────────┐\n" +
-                        "│╺┳╸┏━┓╺┳╸┏━┓┏━┓╻ ╻╻┏━┓╻┏━┓┏┓╻│\n" +
-                        "│ ┃ ┣━┫ ┃ ┃ ┃┣┳┛┃┏┛┃┗━┓┃┃ ┃┃┗┫│\n" +
-                        "│ ╹ ╹ ╹ ╹ ┗━┛╹┗╸┗┛ ╹┗━┛╹┗━┛╹ ╹│\n" +
-                        "└─────────────────────────────┘\n");
-
-        ArgumentParser argParser = new ArgumentParser(args);
-
-        //NativeUtils.loadLibraryFromJar("/");
-
-        logger.info("Using OpenCV Version: {}", Core.VERSION);
+        logger.debug("Using OpenCV Version: {}", Core.VERSION);
 
         String opencvJavaDir = System.getProperty("tatorvision.opencvjavadir");
         if (opencvJavaDir == null)
             opencvJavaDir = "/usr/local/share/OpenCV/java";
         String opencvLib = String.format("%s/lib%s.so", opencvJavaDir, Core.NATIVE_LIBRARY_NAME);
-        logger.info("Loading native library: {}", opencvLib);
+
+        logger.debug("Loading OpenCV native library: {}", opencvLib);
         System.load(opencvLib);
 
-        VisionConfig configData = new VisionConfig();
-        FrameProcessor frameProcessor;
+        VisionConfig configData = getVisionConfig();
 
-        //Load YAML mapper and attempt to copy config parsed config values into a new VisionConfig object
-        if (args.length > 0) {
-            logger.info("Creating YAML Mapper");
-            ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-            logger.info("YAML Mapper Created");
-            try {
-                logger.info("Reading Config File");
-                configData = yamlMapper.readValue(new File(argParser.getConfigFile()), VisionConfig.class);
-                logger.info("Applying Configuration");
-                frameProcessor = new FrameProcessor(configData);
-            } catch (IOException e) {
-                e.printStackTrace();
-                logger.warn("Falling back to default configuration");
-                frameProcessor = new FrameProcessor(new VisionConfig());
-            }
-            logger.info("Done");
-        } else {
-            logger.warn("No arguments provided");
-            logger.warn("Falling back to default configuration");
-            frameProcessor = new FrameProcessor(new VisionConfig());
-        }
+        FrameProcessor frameProcessor = new FrameProcessor();
 
         //Initialize Video Capture
         //Runtime.getRuntime().exec(/*v4lctl setup commands*/);
         VideoCapture videoCapture = new VideoCapture();
-        //TODO: Test if CAP_PROP_EXPOSURE modifies USB webcam settings
-        videoCapture.set(Videoio.CAP_PROP_EXPOSURE, 2);
         videoCapture.open(configData.getCameraIndex());
+        if (!videoCapture.isOpened()) {
+            logger.error("Error opening OpeCV camera {}", configData.getCameraIndex());
+            System.exit(1);
+        }
 
         //Populate and display originalImage
         Mat frame = new Mat();
@@ -86,34 +60,32 @@ public class Main {
 
         //Initialize NetworkTable server
         NetworkTable.setClientMode();
-        NetworkTable.setIPAddress(configData.getRobotHost());
+        NetworkTable.setIPAddress(configData.getNetworkTablesHost());
         NetworkTable.initialize();
         NetworkTable table = null;
         ITable visionSubTable = null;
 
-        //Initialize MJPEG stream server
+        // Start MJPEG stream server
         MJPEGServer mjpegServer = null;
-        Thread serverThread;
         if (configData.getStream()) {
-            mjpegServer = new MJPEGServer(configData.getmjpegPortNumber());
-            serverThread = new Thread(mjpegServer);
-            serverThread.start();
+            mjpegServer = new MJPEGServer();
+            mjpegServer.setPort(configData.getPort());
+            mjpegServer.start();
         }
 
-        //Initialize FrameProcessor Thread
-        Thread frameProcessorThread = new Thread(frameProcessor);
-        frameProcessorThread.start();
+        // Start FrameProcessor Thread
+        frameProcessor.applyConfig(configData);
+        frameProcessor.start();
 
         //Initialize timer marker
         long lastTimeMarker = System.currentTimeMillis();
 
         while (true) {
-
             if (NetworkTable.connections().length > 0) {
                 if (table == null) {
                     logger.debug("Creating Network Tables");
                     table = NetworkTable.getTable(configData.getNetworkTableName());
-                    visionSubTable = table.getSubTable(configData.getVisionDataSubTableName());
+                    visionSubTable = table.getSubTable("position");
                     logger.debug("Main Table: " + table);
                     logger.debug("Vision Subtable: " + table);
                 }
@@ -123,13 +95,8 @@ public class Main {
             }
 
             videoCapture.read(frame);
-            if (configData.getInputScale() > 1.0) {
-                Imgproc.pyrUp(frame, frame, new Size(configData.getInputScale(), configData.getInputScale()));
-            }
-
-            if (configData.getInputScale() < 1.0) {
-                Imgproc.pyrDown(frame, frame, new Size(configData.getInputScale(), configData.getInputScale()));
-            }
+            double[] inputRes = configData.getInputRes();
+            Imgproc.resize(frame, frame, new Size(inputRes));
 
             if (configData.getFlipX()) {
                 Core.flip(frame, frame, 1); //flip on x axis to look like a mirror (less confusing for testing w/ laptop webcam)
@@ -141,13 +108,9 @@ public class Main {
 
             if (configData.getStream() && System.currentTimeMillis() - lastTimeMarker > configData.getFrameDelay() && mjpegServer.getQueueLength() < 10) {
                 Mat streamFrame = frame.clone();
-                if (configData.getStreamScale() > 1.0) {
-                    Imgproc.pyrUp(streamFrame, streamFrame, new Size(configData.getStreamScale(), configData.getStreamScale()));
-                }
+                double[] streamRes = configData.getStreamRes();
+                Imgproc.resize(streamFrame, streamFrame, new Size(streamRes));
 
-                if (configData.getStreamScale() < 1.0) {
-                    Imgproc.pyrDown(streamFrame, streamFrame, new Size(configData.getStreamScale(), configData.getStreamScale()));
-                }
                 mjpegServer.queueImage(ImageDisplay.Mat2BufferedImage(streamFrame));
                 lastTimeMarker = System.currentTimeMillis();
             }
@@ -165,60 +128,24 @@ public class Main {
         }
     }
 
-    /**
-     * Searches for a file recursively given a regular expression (for file extension) and a naome comparison stream
-     * @param searchFile path to search for file in
-     * @param searchName
-     * @param regex
-     * @return returns absolute path of found file or "" if no file was found
-     */
-    private static String searchForFile(File searchFile, String searchName, String regex) {
-        if (searchFile.isFile()) {
-            logger.trace("Checking:\t\t" + searchFile.getName());
-            if (checkRegex(searchFile.getAbsolutePath(), regex) && searchFile.getName().contains(searchName)) {   //for some reason, valid regex matches have 0 elements
-                return searchFile.getAbsolutePath();
-            }
-        } else {
-            if(logger.getLevel().equals(Level.TRACE)) System.out.println();
-            logger.trace("Searching:\t" + searchFile.getPath());
-            File[] files = searchFile.listFiles();
-            for (File file : files) {
-                String searchResult = searchForFile(file, searchName, regex);
-                if (!searchResult.equals("")) return searchResult;
-            }
+    private static VisionConfig getVisionConfig() {
+        String configFile = System.getenv("TATORVISION_CONFIG");
+        if (configFile == null)
+            configFile = "./config.yml";
+
+        VisionConfig configData;
+
+        ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory())
+                .registerModule(new KotlinModule());
+        try {
+            File file = new File(configFile);
+            logger.debug("Reading configuration from {}", file.getAbsoluteFile());
+            configData = yamlMapper.readValue(file, VisionConfig.class);
+        } catch (Exception e) {
+            logger.error("Error reading configuration file", e);
+            System.exit(1);
+            return null;
         }
-
-        return "";
-    }
-
-    /**
-     * Searches for a native library file recursively (.jnilib, .dylib, .dll, .so)
-     * @param searchFile path to search for library in
-     * @param searchName name to compare libraries to for matches
-     * @return absolute file path of found library or "" if no library was found
-     */
-    private static String searchForLibrary(File searchFile, String searchName) {
-        return searchForFile(searchFile, searchName, ".*((\\.jnilib)|(\\.dylib)|(\\.dll)|(\\.so))");
-    }
-
-    /**
-     * Searches for a YAML file recursively
-     * @param searchFile path to search for YAML file in
-     * @param searchName name to compare YAML files to for matches
-     * @return absolute file path of found YAML file or "" if no YAML file was found
-     */
-    private static String searchForYaml(File searchFile, String searchName) {
-        return searchForFile(searchFile, searchName, "((\\.yml)|(\\.yaml))");
-    }
-
-    /**
-     * Checks if a String matches a given regular expression
-     * @param string the String to match with
-     * @param regex the regular expression to match against
-     * @return whether or not the String matches the regular expression
-     */
-    private static boolean checkRegex(String string, String regex) {
-        String[] regexArray = string.split(regex);
-        return regexArray.length == 0;
+        return configData;
     }
 }

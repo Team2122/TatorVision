@@ -4,14 +4,14 @@ import org.opencv.core.*;
 import org.opencv.imgproc.*;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.tables.ITable;
-import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-public class FrameProcessor implements Runnable {
-    //TODO reimplement using a LinkedBlockingQueue<E>
-    private ArrayList<Mat> inputMatQueue = new ArrayList<>();
-    private ArrayList<Point> outputTargetQueue = new ArrayList<>();
+public class FrameProcessor {
+    private BlockingQueue<Mat> inputMatQueue = new LinkedBlockingQueue<>();
+    private BlockingQueue<Point> outputTargetQueue = new LinkedBlockingQueue<>();
     Mat erodeKernel = Imgproc.getStructuringElement(Imgproc.MORPH_ERODE, new Size(2.0, 2.0));
     Mat dilateKernel = Imgproc.getStructuringElement(Imgproc.MORPH_DILATE, new Size(2.0, 2.0));
 
@@ -27,14 +27,12 @@ public class FrameProcessor implements Runnable {
     private boolean display;
     private boolean stream;
     private boolean debug;
-
     private int timeMarker;
 
-    public FrameProcessor(VisionConfig configData) {
-        applyConfig(configData);
-    }
+    private boolean running = false;
+    private Thread thread;
 
-    private void applyConfig(VisionConfig configData) {
+    public void applyConfig(VisionConfig configData) {
         double[] fieldOfViewArray = configData.getFieldOfView();
         fieldOfView = new Size(fieldOfViewArray[0], fieldOfViewArray[1]);
         int[] lowerThresholdArray = configData.getLowerThreshold();
@@ -49,12 +47,35 @@ public class FrameProcessor implements Runnable {
         debug = configData.getDebug();
     }
 
-    public void run() {
+    public void start() {
+        running = true;
+        thread = new Thread(this::run, "FrameProcessor.run");
+        thread.start();
+    }
+
+    public void stop() {
+        running = false;
+        thread.interrupt();
+    }
+
+    private void run() {
         while (true) {
-            if (inputMatQueue.size() > 0) {
-                outputTargetQueue.add(process(inputMatQueue.remove(0)));
+            try {
+                Mat mat = inputMatQueue.take();
+                Point result = process(mat);
+                outputTargetQueue.put(result);
+            } catch (InterruptedException e) {
+                return;
             }
         }
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public Thread getThread() {
+        return thread;
     }
 
     public Point process(Mat inputMat) {
@@ -142,16 +163,16 @@ public class FrameProcessor implements Runnable {
 
             //Draw debug data
             if (debug && (display || stream)) {
-                //drawCornerRect(inputMat, (int) (inputMat.size().width / 2), (int) (inputMat.size().height / 2), 25, 25, new Scalar(0, 0, 255), 1);
+                //drawCenterRect(inputMat, (int) (inputMat.size().width / 2), (int) (inputMat.size().height / 2), 25, 25, new Scalar(0, 0, 255), 1);
                 //Imgproc.putText(inputMat, String.valueOf(calcDistance(maxRotatedRect, targetSize, inputMat.size(), fieldOfView)), new Point(0, inputMat.size().height - 5), 0, 0.5, new Scalar(0, 0, 255));
                 Imgproc.drawContours(inputMat, contours, maxSizeIndex, new Scalar(0, 255, 0), 3);
             }
-            drawCornerRect(inputMat, new Point(inputMat.size().width / 2 + correction.x, inputMat.size().height / 2 + correction.y), 25, 25, new Scalar(0, 0, 255), 1);   //to be replaced with corrected targeting values
+            drawCenterRect(inputMat, new Point(inputMat.size().width / 2 + correction.x, inputMat.size().height / 2 + correction.y), 25, 25, new Scalar(0, 0, 255), 1);   //to be replaced with corrected targeting values
             Imgproc.line(inputMat, new Point(0, inputMat.size().height / 2 + correction.y), new Point(inputMat.size().width, inputMat.size().height / 2 + correction.y), new Scalar(0, 0, 255));
             Imgproc.line(inputMat, new Point(inputMat.size().width / 2 + correction.x, 0), new Point(inputMat.size().width / 2 + correction.x, inputMat.size().height), new Scalar(0, 0, 255));
             return target;
         }
-        drawCornerRect(inputMat, new Point(inputMat.size().width / 2, inputMat.size().height / 2), 25, 25, new Scalar(0, 0, 255), 1);
+        drawCenterRect(inputMat, new Point(inputMat.size().width / 2, inputMat.size().height / 2), 25, 25, new Scalar(0, 0, 255), 1);
         Imgproc.line(inputMat, new Point(0, inputMat.size().height / 2), new Point(inputMat.size().width, inputMat.size().height / 2), new Scalar(0, 0, 255));
         Imgproc.line(inputMat, new Point(inputMat.size().width / 2, 0), new Point(inputMat.size().width / 2, inputMat.size().height), new Scalar(0, 0, 255));
         return null;
@@ -182,7 +203,7 @@ public class FrameProcessor implements Runnable {
         return (degrees / fov) * resolution;
     }
 
-    private void drawCornerRect(Mat image, Point center, int width, int height, Scalar color, int thickness) {
+    private void drawCenterRect(Mat image, Point center, int width, int height, Scalar color, int thickness) {
         int upperRightX = (int) center.x + width / 2;
         int upperRightY = (int) center.y - height / 2;
         int upperLeftX = (int) center.x - width / 2;
@@ -213,10 +234,7 @@ public class FrameProcessor implements Runnable {
     }
 
     public Point getTarget() {
-        if (outputTargetQueue.size() > 0) {
-            return outputTargetQueue.remove(0);
-        }
-        return null;
+        return outputTargetQueue.poll();
     }
 
     public int getTargetQueueSize() {
