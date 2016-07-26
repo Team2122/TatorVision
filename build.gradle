@@ -10,14 +10,14 @@ buildscript {
     }
 }
 
+def openCVJavaDir = getProperty("openCVJavaDir")
+
 group 'org.teamtators.vision'
 version '1.0'
 
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'kotlin'
-
-def openCVJavaDir = '/usr/local/share/OpenCV/java'
 
 repositories {
     flatDir {
@@ -34,8 +34,10 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
 
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.6.1'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.6.1'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+    compile group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.21'
+    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.1.7'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7'
 
     compile group: 'edu.wpi.first.wpilib.networktables.java', name: 'NetworkTables', version: '3.0.0-SNAPSHOT', classifier: 'desktop'
     compile group: 'edu.wpi.first.wpilib.networktables.java', name: 'NetworkTables', version: '3.0.0-SNAPSHOT', classifier: 'arm'
@@ -48,6 +50,8 @@ dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.7.5'
     compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.7.5'
     compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.7.5'
+    compile group: 'org.glassfish.grizzly', name: 'grizzly-http-server', version: '2.3.25'
+    compile group: 'com.google.guava', name: 'guava', version: '19.0'
 }
 
 def mainClassName = 'org.teamtators.vision.Main'

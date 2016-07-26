@@ -1,30 +1,64 @@
 package org.teamtators.vision;
 
 import java.io.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.tables.ITable;
 import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.*;
 import org.opencv.imgproc.*;
 
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.yaml.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import org.apache.logging.log4j.*;
+import javax.swing.*;
 
 public class Main {
-    private static final Logger logger = LogManager.getRootLogger();
+    static {
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final String TATORVISION_HEADER = "\n" +
             "┌─────────────────────────────┐\n" +
             "│╺┳╸┏━┓╺┳╸┏━┓┏━┓╻ ╻╻┏━┓╻┏━┓┏┓╻│\n" +
             "│ ┃ ┣━┫ ┃ ┃ ┃┣┳┛┃┏┛┃┗━┓┃┃ ┃┃┗┫│\n" +
             "│ ╹ ╹ ╹ ╹ ┗━┛╹┗╸┗┛ ╹┗━┛╹┗━┛╹ ╹│\n" +
             "└─────────────────────────────┘\n";
+    private String[] args;
+
+    private VisionConfig configData;
+    private TatorVisionServer server;
+    private FrameProcessor frameProcessor;
+    private volatile boolean running = false;
+    private ThreadPoolExecutor executor;
+    private VideoCapture videoCapture;
+    private Mat frame;
+    private OpenCVDisplay imageDisplay;
+    private NetworkTable table;
+    private ITable visionSubTable;
+
+    public Main(String[] args) {
+        this.args = args;
+    }
 
     public static void main(String[] args) {
+        new Main(args).start();
+    }
+
+    private void start() {
         logger.info(TATORVISION_HEADER);
+        executor = new ThreadPoolExecutor(2, 10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
         logger.debug("Using OpenCV Version: {}", Core.VERSION);
 
@@ -35,53 +69,80 @@ public class Main {
 
         logger.debug("Loading OpenCV native library: {}", opencvLib);
         System.load(opencvLib);
+        configData = getVisionConfig();
 
-        VisionConfig configData = getVisionConfig();
+        frameProcessor = new FrameProcessor();
+        frameProcessor.applyConfig(configData);
 
-        FrameProcessor frameProcessor = new FrameProcessor();
+        // Start MJPEG stream server
+        if (configData.getStream()) {
+            server = new TatorVisionServer();
+            server.setPort(configData.getPort());
+            server.start();
+        }
+
+        // Start FrameProcessor Thread
+//        frameProcessor.start();
 
         //Initialize Video Capture
         //Runtime.getRuntime().exec(/*v4lctl setup commands*/);
-        VideoCapture videoCapture = new VideoCapture();
+        videoCapture = new VideoCapture();
         videoCapture.open(configData.getCameraIndex());
         if (!videoCapture.isOpened()) {
-            logger.error("Error opening OpeCV camera {}", configData.getCameraIndex());
+            logger.error("Error opening OpenCV camera {}", configData.getCameraIndex());
             System.exit(1);
         }
 
         //Populate and display originalImage
-        Mat frame = new Mat();
-        videoCapture.read(frame);
+        frame = Mat.zeros(new Size(configData.getInputRes()), CvType.CV_8UC3);
 
-        ImageDisplay mainWindow = null;
+        imageDisplay = null;
         if (configData.getDisplay()) {
-            mainWindow = new ImageDisplay(frame);
+            logger.info("Starting image display");
+            JFrame window = new JFrame();
+            imageDisplay = new OpenCVDisplay(frame);
+            window.add(imageDisplay);
+            window.pack();
+            window.setVisible(true);
+            window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         }
 
+        table = null;
+        visionSubTable = null;
         //Initialize NetworkTable server
-        NetworkTable.setClientMode();
-        NetworkTable.setIPAddress(configData.getNetworkTablesHost());
-        NetworkTable.initialize();
-        NetworkTable table = null;
-        ITable visionSubTable = null;
-
-        // Start MJPEG stream server
-        MJPEGServer mjpegServer = null;
-        if (configData.getStream()) {
-            mjpegServer = new MJPEGServer();
-            mjpegServer.setPort(configData.getPort());
-            mjpegServer.start();
+        if (configData.getTables()) {
+            NetworkTable.setClientMode();
+            NetworkTable.setIPAddress(configData.getNetworkTablesHost());
+            NetworkTable.initialize();
         }
 
-        // Start FrameProcessor Thread
-        frameProcessor.applyConfig(configData);
-        frameProcessor.start();
+        running = true;
+        executor.execute(this::process);
 
-        //Initialize timer marker
-        long lastTimeMarker = System.currentTimeMillis();
+        Runtime.getRuntime().addShutdownHook(new Thread(this::stop, "Stop"));
+    }
 
-        while (true) {
-            if (NetworkTable.connections().length > 0) {
+    private void stop() {
+        logger.info("Stopping...");
+
+        server.stop();
+        frameProcessor.setRunning(false);
+        running = false;
+        executor.shutdownNow();
+        try {
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    private void process() {
+        double[] inputRes = configData.getInputRes();
+        Size inputSize = new Size(inputRes);
+        double[] streamRes = configData.getStreamRes();
+        Size streamSize = new Size(streamRes);
+
+        while (running) {
+            if (configData.getTables() && NetworkTable.connections().length > 0) {
                 if (table == null) {
                     logger.debug("Creating Network Tables");
                     table = NetworkTable.getTable(configData.getNetworkTableName());
@@ -95,35 +156,35 @@ public class Main {
             }
 
             videoCapture.read(frame);
-            double[] inputRes = configData.getInputRes();
-            Imgproc.resize(frame, frame, new Size(inputRes));
+            Imgproc.resize(frame, frame, inputSize);
 
             if (configData.getFlipX()) {
                 Core.flip(frame, frame, 1); //flip on x axis to look like a mirror (less confusing for testing w/ laptop webcam)
             }
 
-            if (frameProcessor.getInputMatQueueSize() < 10) {
-                frameProcessor.process(frame);
-            }
+            Point target = frameProcessor.process(frame);
 
-            if (configData.getStream() && System.currentTimeMillis() - lastTimeMarker > configData.getFrameDelay() && mjpegServer.getQueueLength() < 10) {
-                Mat streamFrame = frame.clone();
-                double[] streamRes = configData.getStreamRes();
-                Imgproc.resize(streamFrame, streamFrame, new Size(streamRes));
-
-                mjpegServer.queueImage(ImageDisplay.Mat2BufferedImage(streamFrame));
-                lastTimeMarker = System.currentTimeMillis();
-            }
-
-            if (frameProcessor.getTargetQueueSize() > 0 && table != null && visionSubTable != null) {
+//            Point target = null;
+//            try {
+//                target = frameProcessor.takeTarget();
+//            } catch (InterruptedException e) {
+//                continue;
+//            }
+            if (visionSubTable != null) {
                 //logger.trace("Putting values to table");
-                Point target = frameProcessor.getTarget();
                 visionSubTable.putNumber("x", target.x);
                 visionSubTable.putNumber("y", target.y);
             }
 
-            if (configData.getDisplay()) {
-                mainWindow.updateImage(frame);
+            Mat streamFrame = frame.clone();
+            Imgproc.resize(streamFrame, streamFrame, streamSize);
+
+            if (server != null) {
+                server.writeImage(OpenCVDisplay.matToBufferedImage(streamFrame));
+            }
+
+            if (imageDisplay != null) {
+                imageDisplay.updateImage(streamFrame);
             }
         }
     }

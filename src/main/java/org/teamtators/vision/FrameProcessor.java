@@ -30,15 +30,11 @@ public class FrameProcessor {
     private int timeMarker;
 
     private boolean running = false;
-    private Thread thread;
 
     public void applyConfig(VisionConfig configData) {
-        double[] fieldOfViewArray = configData.getFieldOfView();
-        fieldOfView = new Size(fieldOfViewArray[0], fieldOfViewArray[1]);
-        int[] lowerThresholdArray = configData.getLowerThreshold();
-        int[] upperThresholdArray = configData.getUpperThreshold();
-        lowerThreshold = new Scalar(lowerThresholdArray[0], lowerThresholdArray[1], lowerThresholdArray[2]);
-        upperThreshold = new Scalar(upperThresholdArray[0], upperThresholdArray[1], upperThresholdArray[2]);
+        fieldOfView = new Size(configData.getFieldOfView());
+        lowerThreshold = new Scalar(configData.getLowerThreshold());
+        upperThreshold = new Scalar(configData.getUpperThreshold());
         minArea = configData.getMinArea();
         maxArea = configData.getMaxArea();
         arcLengthPercentage = configData.getArcLengthPercentage();
@@ -47,25 +43,13 @@ public class FrameProcessor {
         debug = configData.getDebug();
     }
 
-    public void start() {
-        running = true;
-        thread = new Thread(this::run, "FrameProcessor.run");
-        thread.start();
-    }
-
-    public void stop() {
-        running = false;
-        thread.interrupt();
-    }
-
-    private void run() {
-        while (true) {
+    public void run() {
+        while (this.running) {
             try {
                 Mat mat = inputMatQueue.take();
                 Point result = process(mat);
                 outputTargetQueue.put(result);
-            } catch (InterruptedException e) {
-                return;
+            } catch (InterruptedException ignored) {
             }
         }
     }
@@ -74,8 +58,8 @@ public class FrameProcessor {
         return running;
     }
 
-    public Thread getThread() {
-        return thread;
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 
     public Point process(Mat inputMat) {
@@ -233,11 +217,11 @@ public class FrameProcessor {
         return inputMatQueue.size();
     }
 
-    public Point getTarget() {
-        return outputTargetQueue.poll();
+    public boolean hasNewTarget() {
+        return outputTargetQueue.size() > 0;
     }
 
-    public int getTargetQueueSize() {
-        return outputTargetQueue.size();
+    public Point takeTarget() throws InterruptedException {
+        return outputTargetQueue.take();
     }
 }
