@@ -3,20 +3,23 @@ package org.teamtators.vision.ui
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
-import org.slf4j.LoggerFactory
-import org.teamtators.vision.VisionConfig
+import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.DisplayImageEvent
 import org.teamtators.vision.events.StartEvent
+import org.teamtators.vision.loggerFor
 import java.awt.image.BufferedImage
 import javax.swing.JFrame
 import javax.swing.WindowConstants
 
 class VisionDisplay @Inject constructor(
-        val visionConfig: VisionConfig,
+        _config: Config,
         val eventBus: EventBus
 ) : JFrame() {
-    val logger = LoggerFactory.getLogger(javaClass)
+    companion object {
+        val logger = loggerFor<VisionDisplay>()
+    }
 
+    val config = _config.vision
     val imageDisplay: OpenCVDisplay
 
     init {
@@ -32,8 +35,8 @@ class VisionDisplay @Inject constructor(
 
     fun start() {
         logger.info("Starting image display")
-        val frame = BufferedImage(visionConfig.streamRes.width.toInt(),
-                visionConfig.streamRes.height.toInt(),
+        val frame = BufferedImage(config.streamRes.width.toInt(),
+                config.streamRes.height.toInt(),
                 BufferedImage.TYPE_3BYTE_BGR)
         imageDisplay.updateImage(frame)
         this.pack()

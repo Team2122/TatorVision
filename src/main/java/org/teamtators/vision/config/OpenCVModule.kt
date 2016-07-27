@@ -1,4 +1,4 @@
-package org.teamtators.vision.json
+package org.teamtators.vision.config
 
 import com.fasterxml.jackson.databind.module.SimpleModule
 import org.opencv.core.Scalar

@@ -1,7 +1,7 @@
 package org.teamtators.vision.ui
 
 import org.opencv.core.Mat
-import org.teamtators.vision.matToBufferedImage
+import org.teamtators.vision.ui.matToBufferedImage
 
 import javax.swing.*
 import java.awt.image.BufferedImage

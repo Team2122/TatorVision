@@ -4,9 +4,9 @@ import com.google.common.eventbus.AsyncEventBus
 import com.google.common.eventbus.EventBus
 import com.google.inject.Provides
 import com.google.inject.Singleton
-import org.teamtators.vision.FrameProcessor
-import org.teamtators.vision.ImageResizer
-import org.teamtators.vision.OpenCVCapturer
+import org.teamtators.vision.vision.FrameProcessor
+import org.teamtators.vision.vision.ImageResizer
+import org.teamtators.vision.vision.OpenCVCapturer
 import java.util.concurrent.Executor
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor

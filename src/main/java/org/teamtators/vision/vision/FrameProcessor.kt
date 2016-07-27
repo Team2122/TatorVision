@@ -1,4 +1,4 @@
-package org.teamtators.vision
+package org.teamtators.vision.vision
 
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
@@ -6,16 +6,23 @@ import com.google.inject.Inject
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 import org.slf4j.LoggerFactory
+import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.ProcessedFrameEvent
+import org.teamtators.vision.loggerFor
 import java.util.*
 
 class FrameProcessor @Inject constructor(
-        val visionConfig: VisionConfig,
+        val _config: Config,
         val eventBus: EventBus
 ) {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    companion object {
+        private val logger = loggerFor<FrameProcessor>()
+    }
+
     class ProcessResult(val frame: Mat, val target: Point?)
+
+    private val config = _config.vision
 
     init {
         logger.debug("Registering FrameProcessor")
@@ -26,23 +33,19 @@ class FrameProcessor @Inject constructor(
     private var dilateKernel = Imgproc.getStructuringElement(Imgproc.MORPH_DILATE, Size(2.0, 2.0))
 
     @Subscribe
-    fun processCapturedMat(event : CapturedMatEvent) {
+    fun processCapturedMat(event: CapturedMatEvent) {
         val result = process(event.mat)
         eventBus.post(ProcessedFrameEvent(result))
     }
 
+
     fun process(inputMat: Mat): ProcessResult {
         //here we will write any debug info if necessary onto inputMat (displayed in the main thread) and work on a copy of it
-        val workingMat: Mat
-        if (visionConfig.display || visionConfig.server) {
-            workingMat = Mat()
-            inputMat.copyTo(workingMat)
-        } else {
-            workingMat = inputMat  //if we aren't drawing, we don't need to worry about keeping a clean copy of the frame
-        }
+        val workingMat = Mat()
+        inputMat.copyTo(workingMat)
 
         Imgproc.cvtColor(workingMat, workingMat, Imgproc.COLOR_BGR2HSV)
-        Core.inRange(workingMat, visionConfig.lowerThreshold, visionConfig.upperThreshold, workingMat)
+        Core.inRange(workingMat, config.lowerThreshold, config.upperThreshold, workingMat)
 
         Imgproc.erode(workingMat, workingMat, erodeKernel, Point(), 3);
         Imgproc.dilate(workingMat, workingMat, dilateKernel, Point(), 2);
@@ -62,8 +65,8 @@ class FrameProcessor @Inject constructor(
             while (i < contours.size) {
                 val contour2f = MatOfPoint2f()
                 contours[i].convertTo(contour2f, CvType.CV_32FC2)
-                if (Imgproc.minAreaRect(contour2f).size.area() < visionConfig.minArea
-                        || Imgproc.minAreaRect(contour2f).size.area() > visionConfig.maxArea) {
+                if (Imgproc.minAreaRect(contour2f).size.area() < config.minArea
+                        || Imgproc.minAreaRect(contour2f).size.area() > config.maxArea) {
                     contours.removeAt(i)
                 } else {
                     i++
@@ -71,7 +74,7 @@ class FrameProcessor @Inject constructor(
             }
         }
 
-        val writeToImage = visionConfig.debug && (visionConfig.display || visionConfig.server)
+        val writeToImage = config.debug && (_config.display || _config.server.enabled)
 
         //Find and approximate contours and largest contour
         for (i in contours.indices) {
@@ -81,7 +84,7 @@ class FrameProcessor @Inject constructor(
             val approxContour2f = MatOfPoint2f()
             currentContour.convertTo(contour2f, CvType.CV_32FC2)
 
-            val epsilon = Imgproc.arcLength(contour2f, true) * visionConfig.arcLengthPercentage
+            val epsilon = Imgproc.arcLength(contour2f, true) * config.arcLengthPercentage
             Imgproc.approxPolyDP(contour2f, approxContour2f, epsilon, true)
             approxContour2f.convertTo(currentContour, CvType.CV_32S)
 
@@ -116,7 +119,7 @@ class FrameProcessor @Inject constructor(
 
             target = Point(toDegrees((maxRotatedRect.center.x - inputMat.size().width / 2).toInt(),
                     inputMat.size().width.toInt(),
-                    visionConfig.fieldOfView.width), 0.0)
+                    config.fieldOfView.width), 0.0)
 
             //Draw debug data
             if (writeToImage) {

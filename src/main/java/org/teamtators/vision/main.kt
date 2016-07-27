@@ -6,6 +6,7 @@ import com.google.inject.Module
 import org.opencv.core.Core
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
+import org.teamtators.vision.config.ConfigManager
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
 import org.teamtators.vision.modules.*
@@ -44,14 +45,14 @@ fun main(args: Array<String>) {
     modules.add(ConfigModule(config))
     modules.add(VisionModule())
 
-    if (config.server)
+    if (config.server.enabled)
         modules.add(ServerModule())
+
+    if (config.tables.enabled)
+        modules.add(TablesModule())
 
     if (config.display)
         modules.add(DisplayModule())
-
-    if (config.tables)
-        modules.add(TablesModule())
 
     val injector = Guice.createInjector(modules)
     val eventBus : EventBus = injector.getInstance()
@@ -61,7 +62,6 @@ fun main(args: Array<String>) {
 
     Runtime.getRuntime()
             .addShutdownHook(Thread(Runnable {
-
                 logger.info("Stopping...")
 
                 eventBus.post(StopEvent())

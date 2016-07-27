@@ -9,12 +9,14 @@ import org.slf4j.LoggerFactory
 import org.teamtators.vision.events.ProcessedFrameEvent
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
+import org.teamtators.vision.config.Config
 
 class NetworkTablesUpdater @Inject constructor(
-        val visionConfig: VisionConfig,
-        val eventBus: EventBus
+        _config: Config,
+        eventBus: EventBus
 ) {
     val logger = LoggerFactory.getLogger(javaClass)
+    private val config = _config.tables
     private var rootTable: NetworkTable? = null
     private var positionTable: ITable? = null
 
@@ -33,10 +35,11 @@ class NetworkTablesUpdater @Inject constructor(
         this.stop()
     }
 
+
     fun start() {
         NetworkTable.setClientMode()
-        NetworkTable.setIPAddress(visionConfig.networkTablesHost)
-        logger.debug("Attempting to connect to NT server at \"{}\"", visionConfig.networkTablesHost)
+        NetworkTable.setIPAddress(config.host)
+        logger.debug("Attempting to connect to NT server at \"{}\"", config.host)
         NetworkTable.initialize()
     }
 
@@ -50,7 +53,7 @@ class NetworkTablesUpdater @Inject constructor(
         if (NetworkTable.connections().size > 0) {
             if (rootTable == null) {
                 logger.info("Connected to NT server")
-                rootTable = NetworkTable.getTable(visionConfig.networkTableName)
+                rootTable = NetworkTable.getTable(config.rootName)
                 positionTable = rootTable?.getSubTable("position")
                 logger.debug("Position table: " + positionTable)
             }
@@ -61,7 +64,7 @@ class NetworkTablesUpdater @Inject constructor(
 
         val target = event.result.target
         if (positionTable != null && target != null) {
-            logger.trace("Putting values to rootTable");
+            logger.trace("Putting values to position table");
             positionTable?.putNumber("x", target.x);
             positionTable?.putNumber("y", target.y);
         }

@@ -1,4 +1,4 @@
-package org.teamtators.vision.json
+package org.teamtators.vision.config
 
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException

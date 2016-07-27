@@ -1,17 +1,19 @@
-package org.teamtators.vision
+package org.teamtators.vision.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.slf4j.LoggerFactory
-import org.teamtators.vision.json.OpenCVModule
+import org.teamtators.vision.config.Config
+import org.teamtators.vision.config.OpenCVModule
+import org.teamtators.vision.loggerFor
 import java.io.File
 
 class ConfigManager {
     companion object {
-        private val logger = LoggerFactory.getLogger(ConfigManager::class.java)
+        private val logger = loggerFor<ConfigManager>()
 
-        fun loadVisionConfig(): VisionConfig {
+        fun loadVisionConfig(): Config {
             var configFile: String? = System.getenv("TATORVISION_CONFIG")
             if (configFile == null)
                 configFile = "./config.yml"
@@ -19,18 +21,17 @@ class ConfigManager {
             return loadVisionConfig(configFile)
         }
 
-        fun loadVisionConfig(configFile:String):VisionConfig {
+        fun loadVisionConfig(configFile:String): Config {
             val yamlMapper = ObjectMapper(YAMLFactory())
                     .registerModule(KotlinModule())
                     .registerModule(OpenCVModule())
             try {
                 val file = File(configFile)
                 logger.debug("Reading configuration from {}", file.absoluteFile)
-                return yamlMapper.readValue(file, VisionConfig::class.java)
-            } catch (e: Exception) {
+                return yamlMapper.readValue(file, Config::class.java)
+            } catch (e: Throwable) {
                 logger.error("Error reading configuration file", e)
-                System.exit(1)
-                return VisionConfig()
+                throw e;
             }
         }
     }

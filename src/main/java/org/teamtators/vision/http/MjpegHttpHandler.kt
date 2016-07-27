@@ -8,6 +8,7 @@ import org.glassfish.grizzly.http.server.Request
 import org.glassfish.grizzly.http.server.Response
 import org.slf4j.LoggerFactory
 import org.teamtators.vision.events.DisplayImageEvent
+import org.teamtators.vision.loggerFor
 
 import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
@@ -15,10 +16,14 @@ import java.io.IOException
 import java.io.OutputStream
 
 
-internal class MjpegHttpHandler @Inject constructor(private val eventBus: EventBus) :
+internal class MjpegHttpHandler @Inject constructor(
+        private val eventBus: EventBus
+) :
         HttpHandler("MjpegHttpHandler") {
+    companion object {
+        private val logger = loggerFor<MjpegHttpHandler>()
+    }
 
-    private val logger = LoggerFactory.getLogger(javaClass)
     private val BOUNDARY = "--JPEG_BOUNDARY\r\nContent-type: image/jpg\r\n\r\n".toByteArray()
 
     @Throws(Exception::class)

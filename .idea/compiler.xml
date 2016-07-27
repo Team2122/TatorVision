@@ -18,5 +18,9 @@
         <processorPath useClasspath="true" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="TatorVision_main" target="1.8" />
+      <module name="TatorVision_test" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

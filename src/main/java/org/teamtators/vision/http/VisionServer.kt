@@ -5,21 +5,26 @@ import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
 import org.glassfish.grizzly.http.server.HttpServer
 import org.slf4j.LoggerFactory
-import org.teamtators.vision.VisionConfig
+import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
+import org.teamtators.vision.loggerFor
 import java.io.IOException
 
 class VisionServer @Inject constructor(
-        private val visionConfig: VisionConfig,
+        _config: Config,
         private val eventBus: EventBus
 ) {
-    private val logger = LoggerFactory.getLogger(javaClass)
+    companion object {
+        private val logger = loggerFor<VisionServer>()
+    }
 
-    private val server: HttpServer = HttpServer.createSimpleServer("./www", visionConfig.port)
+    private val config = _config.server
+    private val server: HttpServer
 
     init {
-        logger.debug("Registering VisionServer")
+        logger.debug("Creating and registering VisionServer")
+        server = HttpServer.createSimpleServer("./www", config.port)
         eventBus.register(this);
     }
 
@@ -37,7 +42,7 @@ class VisionServer @Inject constructor(
         server.serverConfiguration.addHttpHandler(MjpegHttpHandler(eventBus), "/stream.mjpg")
         try {
             server.start()
-            logger.info("Started HTTP server on port {}", visionConfig.port)
+            logger.info("Started HTTP server on port {}", config.port)
         } catch (e: IOException) {
             logger.error("Error starting HTTP server", e)
         }

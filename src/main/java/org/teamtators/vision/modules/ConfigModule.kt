@@ -1,9 +1,9 @@
 package org.teamtators.vision.modules
 
-import org.teamtators.vision.VisionConfig
+import org.teamtators.vision.config.Config
 
-class ConfigModule(private val visionConfig: VisionConfig) : AbstractKotlinModule() {
+class ConfigModule(private val config: Config) : AbstractKotlinModule() {
     override fun configure() {
-        bind<VisionConfig>().toInstance(visionConfig)
+        bind<Config>().toInstance(config)
     }
 }

@@ -19,8 +19,8 @@ maxArea: 100000 #about 1/3 of the screen size (640x480), does not correspond to 
 arcLengthPercentage:  0.01 #determines how much to simplify contours
 
 flipX:  false  #flip image from left to right
-display:  true  #display an image on screen
-server: false  #stream MJPEG data
+display:  false  #display an image on screen
+server: true  #stream MJPEG data
 tables: false
 debug:  true  #show debug info on screen/stream
 

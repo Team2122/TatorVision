@@ -54,8 +54,6 @@ dependencies {
     compile group: 'org.glassfish.grizzly', name: 'grizzly-http-server', version: '2.3.25'
     compile group: 'com.google.guava', name: 'guava', version: '19.0'
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
-
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '$kotlin_version'
 }
 
 def mainClassName = 'org.teamtators.vision.MainKt'
@@ -68,14 +66,6 @@ jar {
         )
     }
     from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-}
-
-uploadArchives {
-    repositories {
-        flatDir {
-            dirs 'jar'
-        }
-    }
 }
 
 task run(type: JavaExec) {
