@@ -34,16 +34,17 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
 
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
-    compile group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.21'
-    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.1.7'
-    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7'
 
     compile group: 'edu.wpi.first.wpilib.networktables.java', name: 'NetworkTables', version: '3.0.0-SNAPSHOT', classifier: 'desktop'
     compile group: 'edu.wpi.first.wpilib.networktables.java', name: 'NetworkTables', version: '3.0.0-SNAPSHOT', classifier: 'arm'
 
     compile group: 'org.opencv', name: 'opencv-310'
     files 'libopencv_java310.so'
+
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+    compile group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.21'
+    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.1.7'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7'
 
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.7.5'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.7.5'
@@ -52,14 +53,17 @@ dependencies {
     compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.7.5'
     compile group: 'org.glassfish.grizzly', name: 'grizzly-http-server', version: '2.3.25'
     compile group: 'com.google.guava', name: 'guava', version: '19.0'
+    compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
+
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '$kotlin_version'
 }
 
-def mainClassName = 'org.teamtators.vision.Main'
+def mainClassName = 'org.teamtators.vision.MainKt'
 
 jar {
     manifest {
         attributes(
-                'Main-Class': 'org.teamtators.vision.Main',
+                'Main-Class': mainClassName,
                 "Class-Path": configurations.compile.collect { it.getName() }.join(' ')
         )
     }
