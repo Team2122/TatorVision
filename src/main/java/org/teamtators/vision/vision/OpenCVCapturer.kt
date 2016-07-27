@@ -36,6 +36,7 @@ class OpenCVCapturer @Inject constructor(
         eventBus.register(this)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Subscribe
     private fun onStart(ignored: StartEvent) {
         this.start()
@@ -46,6 +47,7 @@ class OpenCVCapturer @Inject constructor(
         executor.execute { run() }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Subscribe
     private fun onStop(ignored: StopEvent) {
         this.stop()

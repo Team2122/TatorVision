@@ -1,5 +1,6 @@
 package org.teamtators.vision.http
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
@@ -16,8 +17,9 @@ import org.teamtators.vision.loggerFor
 import java.io.IOException
 
 class VisionServer @Inject constructor(
-        val _config: Config,
-        private val eventBus: EventBus
+        private val _config: Config,
+        private val eventBus: EventBus,
+        private val objectMapper: ObjectMapper
 ) {
     companion object {
         private val logger = loggerFor<VisionServer>()
@@ -32,11 +34,13 @@ class VisionServer @Inject constructor(
         eventBus.register(this);
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Subscribe
     private fun onStart(ignored: StartEvent) {
         this.start()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Subscribe
     private fun onStop(ignored: StopEvent) {
         this.stop()
@@ -55,6 +59,8 @@ class VisionServer @Inject constructor(
                     request!!; response!!
                     if (request.method == Method.GET) {
                         val out = response.getOutputStream()
+                        val writer = objectMapper.writer()
+                        writer.writeValue(out, _config.vision)
                     } else {
                         response.setStatus(HttpStatus.METHOD_NOT_ALLOWED_405)
                     }

@@ -28,6 +28,7 @@ class VisionDisplay @Inject constructor(
         eventBus.register(this)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Subscribe
     private fun onStart(ignored: StartEvent) {
         this.start()

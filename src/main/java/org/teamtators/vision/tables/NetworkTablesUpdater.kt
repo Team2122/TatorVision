@@ -25,11 +25,13 @@ class NetworkTablesUpdater @Inject constructor(
         eventBus.register(this)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Subscribe
     private fun onStart(ignored: StartEvent) {
         this.start()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     @Subscribe
     private fun onStop(ignored: StopEvent) {
         this.stop()
