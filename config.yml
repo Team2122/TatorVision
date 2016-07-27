@@ -1,28 +1,31 @@
-#networkTablesHost: "roboRIO-2122-FRC.local"
-networkTablesHost: "127.0.0.1"
-networkTableName: "TatorVision"
+tables:
+  enabled: false
+  #host: "roboRIO-2122-FRC.local"
+  host: "127.0.0.1"
+  rootName: "TatorVision"
 
-port:  8080
-frameDelay: 30  #prevents flooding the network with MJPEG data, 30 = a little over 30 fps
+server:
+  enabled: true
+  port:  8080
 
-cameraIndex:  0 #use 0 for first/only camera (use 1 for testing external camera on computer with webcam)
-fieldOfView:  [120.0, 70.0]  #camera field of view [x, y] in degrees
-#fieldOfView:  [62.2, 48.8]  #FOV of RPI Camera Module
-correction:  [0.0, 0.0]  #angle correction [x, y] in degrees
+vision:
+  maxFPS: 30
+  cameraIndex: 0
+  fieldOfView: [120.0, 70.0]
+#  fieldOfView: [62.2, 48.8]  #FOV of RPI Camera Module
+  offset: [0.0, 0.0] # angle correction [x, y] in degrees
 
-#lowerThreshold: [60, 100, 100]  #Thresholds are in HSV format
-#upperThreshold: [100, 255, 255]
-lowerThreshold: [40, 120, 100]  #Thresholds are in HSV format
-upperThreshold: [120, 255, 255]
-minArea: 1000
-maxArea: 100000 #about 1/3 of the screen size (640x480), does not correspond to # of pixels
-arcLengthPercentage:  0.01 #determines how much to simplify contours
+  #lowerThreshold: [60, 100, 100]  #Thresholds are in HSV format
+  #upperThreshold: [100, 255, 255]
+  lowerThreshold: [40, 120, 100]  #Thresholds are in HSV format
+  upperThreshold: [120, 255, 255]
+  minArea: 1000
+  maxArea: 100000 # about 1/3 of the screen size (640x480), does not correspond to # of pixels
+  arcLengthPercentage:  0.01 # determines how much to simplify contours
+  debug:  true  # show debug info on screen/stream
 
-flipX:  false  #flip image from left to right
+  inputRes: [ 640, 400 ]
+  streamRes: [ 640, 400 ]
+
 display:  false  #display an image on screen
-server: true  #stream MJPEG data
-tables: false
-debug:  true  #show debug info on screen/stream
 
-inputRes: [ 640, 400 ]
-streamRes: [ 640, 400 ]
