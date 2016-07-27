@@ -5,7 +5,6 @@ import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
-import org.slf4j.LoggerFactory
 import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.ProcessedFrameEvent

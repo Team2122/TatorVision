@@ -1,4 +1,4 @@
-package org.teamtators.vision.ui
+package org.teamtators.vision.display
 
 import org.opencv.core.Mat
 import java.awt.image.BufferedImage

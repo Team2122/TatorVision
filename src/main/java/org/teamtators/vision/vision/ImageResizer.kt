@@ -4,12 +4,11 @@ import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
 import org.opencv.imgproc.Imgproc
-import org.slf4j.LoggerFactory
 import org.teamtators.vision.config.Config
-import org.teamtators.vision.events.ProcessedFrameEvent
+import org.teamtators.vision.display.matToBufferedImage
 import org.teamtators.vision.events.DisplayImageEvent
+import org.teamtators.vision.events.ProcessedFrameEvent
 import org.teamtators.vision.loggerFor
-import org.teamtators.vision.ui.matToBufferedImage
 
 class ImageResizer @Inject constructor(
         val config: Config,

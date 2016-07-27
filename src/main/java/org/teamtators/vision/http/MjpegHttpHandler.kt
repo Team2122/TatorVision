@@ -6,14 +6,12 @@ import com.google.inject.Inject
 import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.Request
 import org.glassfish.grizzly.http.server.Response
-import org.slf4j.LoggerFactory
 import org.teamtators.vision.events.DisplayImageEvent
 import org.teamtators.vision.loggerFor
-
-import javax.imageio.ImageIO
 import java.awt.image.BufferedImage
 import java.io.IOException
 import java.io.OutputStream
+import javax.imageio.ImageIO
 
 
 internal class MjpegHttpHandler @Inject constructor(

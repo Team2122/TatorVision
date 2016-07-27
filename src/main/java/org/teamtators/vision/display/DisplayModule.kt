@@ -1,6 +1,6 @@
-package org.teamtators.vision.modules
+package org.teamtators.vision.display
 
-import org.teamtators.vision.ui.VisionDisplay
+import org.teamtators.vision.AbstractKotlinModule
 
 class DisplayModule : AbstractKotlinModule() {
     override fun configure() {

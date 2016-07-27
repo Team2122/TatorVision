@@ -1,4 +1,4 @@
-package org.teamtators.vision
+package org.teamtators.vision.tables
 
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
@@ -6,10 +6,10 @@ import com.google.inject.Inject
 import edu.wpi.first.wpilibj.networktables.NetworkTable
 import edu.wpi.first.wpilibj.tables.ITable
 import org.slf4j.LoggerFactory
+import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.ProcessedFrameEvent
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
-import org.teamtators.vision.config.Config
 
 class NetworkTablesUpdater @Inject constructor(
         _config: Config,
@@ -26,12 +26,12 @@ class NetworkTablesUpdater @Inject constructor(
     }
 
     @Subscribe
-    private fun onStart(ignored : StartEvent) {
+    private fun onStart(ignored: StartEvent) {
         this.start()
     }
 
     @Subscribe
-    private fun onStop(ignored : StopEvent) {
+    private fun onStop(ignored: StopEvent) {
         this.stop()
     }
 
@@ -49,7 +49,7 @@ class NetworkTablesUpdater @Inject constructor(
     }
 
     @Subscribe
-    fun updateNetworkTable(event : ProcessedFrameEvent) {
+    fun updateNetworkTable(event: ProcessedFrameEvent) {
         if (NetworkTable.connections().size > 0) {
             if (rootTable == null) {
                 logger.info("Connected to NT server")

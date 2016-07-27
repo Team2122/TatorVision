@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.StartEvent
+import org.teamtators.vision.events.StopEvent
 import java.util.concurrent.Executor
 
 class OpenCVCapturer @Inject constructor(
@@ -23,8 +24,8 @@ class OpenCVCapturer @Inject constructor(
         private val S_IN_NS = 1000000000
     }
 
-    private var lastFpsTime : Long = 0
-    private var frames : Long = 0
+    private var lastFpsTime: Long = 0
+    private var frames: Long = 0
 
     private val config = _config.vision
 
@@ -36,13 +37,18 @@ class OpenCVCapturer @Inject constructor(
     }
 
     @Subscribe
-    private fun onStart(ignored : StartEvent) {
+    private fun onStart(ignored: StartEvent) {
         this.start()
     }
 
     fun start() {
         running = true
         executor.execute { run() }
+    }
+
+    @Subscribe
+    private fun onStop(ignored: StopEvent) {
+        this.stop()
     }
 
     fun stop() {

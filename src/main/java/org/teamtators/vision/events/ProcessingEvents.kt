@@ -6,6 +6,6 @@ import java.awt.image.BufferedImage
 
 class CapturedMatEvent(val mat: Mat)
 
-class ProcessedFrameEvent(val result : FrameProcessor.ProcessResult)
+class ProcessedFrameEvent(val result: FrameProcessor.ProcessResult)
 
 class DisplayImageEvent(val image: BufferedImage)

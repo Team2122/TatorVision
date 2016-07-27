@@ -34,9 +34,9 @@ class VisionConfig {
 }
 
 class Config {
-    var tables : TablesConfig = TablesConfig()
-    var server : ServerConfig = ServerConfig()
-    var vision : VisionConfig = VisionConfig()
+    var tables: TablesConfig = TablesConfig()
+    var server: ServerConfig = ServerConfig()
+    var vision: VisionConfig = VisionConfig()
 
     var display = false
 }

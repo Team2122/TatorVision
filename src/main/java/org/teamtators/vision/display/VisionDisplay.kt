@@ -1,4 +1,4 @@
-package org.teamtators.vision.ui
+package org.teamtators.vision.display
 
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
@@ -29,7 +29,7 @@ class VisionDisplay @Inject constructor(
     }
 
     @Subscribe
-    private fun onStart(ignored : StartEvent) {
+    private fun onStart(ignored: StartEvent) {
         this.start()
     }
 
@@ -46,7 +46,7 @@ class VisionDisplay @Inject constructor(
     }
 
     @Subscribe
-    fun displayImage(event : DisplayImageEvent) {
+    fun displayImage(event: DisplayImageEvent) {
         imageDisplay.updateImage(event.image)
     }
 }

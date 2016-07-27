@@ -1,6 +1,6 @@
-package org.teamtators.vision.modules
+package org.teamtators.vision.tables
 
-import org.teamtators.vision.NetworkTablesUpdater
+import org.teamtators.vision.AbstractKotlinModule
 
 class TablesModule : AbstractKotlinModule() {
     override fun configure() {

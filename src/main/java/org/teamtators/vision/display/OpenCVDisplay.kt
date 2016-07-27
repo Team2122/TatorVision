@@ -1,10 +1,9 @@
-package org.teamtators.vision.ui
+package org.teamtators.vision.display
 
 import org.opencv.core.Mat
-import org.teamtators.vision.ui.matToBufferedImage
-
-import javax.swing.*
 import java.awt.image.BufferedImage
+import javax.swing.ImageIcon
+import javax.swing.JLabel
 
 class OpenCVDisplay() : JLabel() {
     private val imageIcon: ImageIcon = ImageIcon()

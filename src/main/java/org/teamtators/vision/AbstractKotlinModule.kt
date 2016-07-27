@@ -1,4 +1,4 @@
-package org.teamtators.vision.modules
+package org.teamtators.vision
 
 import com.google.inject.AbstractModule
 import com.google.inject.binder.AnnotatedBindingBuilder
