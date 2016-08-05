@@ -1,6 +1,6 @@
 package org.teamtators.vision.tables
 
-import org.teamtators.vision.AbstractKotlinModule
+import org.teamtators.vision.guiceKt.AbstractKotlinModule
 
 class TablesModule : AbstractKotlinModule() {
     override fun configure() {

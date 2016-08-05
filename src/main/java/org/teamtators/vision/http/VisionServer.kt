@@ -11,6 +11,7 @@ import org.glassfish.grizzly.http.server.Request
 import org.glassfish.grizzly.http.server.Response
 import org.glassfish.grizzly.http.util.HttpStatus
 import org.teamtators.vision.config.Config
+import org.teamtators.vision.config.Json
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
 import org.teamtators.vision.loggerFor
@@ -19,7 +20,7 @@ import java.io.IOException
 class VisionServer @Inject constructor(
         private val _config: Config,
         private val eventBus: EventBus,
-        private val objectMapper: ObjectMapper
+        @Json private val objectMapper: ObjectMapper
 ) {
     companion object {
         private val logger = loggerFor<VisionServer>()
@@ -51,21 +52,28 @@ class VisionServer @Inject constructor(
             addHttpHandler(MjpegHttpHandler(eventBus), "/stream.mjpg")
             addHttpHandler(object : HttpHandler() {
                 override fun service(request: Request?, response: Response?) {
-                    _config.vision.debug = !_config.vision.debug
+                    try {
+                        serve(request!!, response!!)
+                    } catch (e : Throwable) {
+                        logger.error("Error handling HTTP request", e)
+                        response!!.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    }
                 }
-            }, "/toggleDebug")
-            addHttpHandler(object : HttpHandler() {
-                override fun service(request: Request?, response: Response?) {
-                    request!!; response!!
+                fun serve(request: Request, response: Response) {
+                    val writer = objectMapper.writer()
                     if (request.method == Method.GET) {
                         val out = response.getOutputStream()
-                        val writer = objectMapper.writer()
+                        writer.writeValue(out, _config.vision)
+                    } else if (request.method == Method.PUT) {
+                        val input = request.getInputStream()
+                        val reader = objectMapper.readerForUpdating(_config.vision)
+                        _config.vision = reader.readValue(input)
+                        val out = response.getOutputStream()
                         writer.writeValue(out, _config.vision)
                     } else {
                         response.setStatus(HttpStatus.METHOD_NOT_ALLOWED_405)
                     }
                 }
-
             }, "/visionConfig")
         }
         try {

@@ -50,3 +50,6 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
+
+# Bower dependencies
+/www/components

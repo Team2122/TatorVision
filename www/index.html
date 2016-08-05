@@ -3,16 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <title>Test</title>
-    <!--<script src="https://code.jquery.com/jquery-3.1.0.min.js"-->
-            <!--integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>-->
-    <script type="application/javascript">
-        function toggleDebug() {
-            $.ajax('/toggleDebug')
-        }
-    </script>
+    <script src="components/jquery/dist/jquery.min.js"></script>
 </head>
 <body>
 <img src="stream.mjpg">
-<button onclick="toggleDebug()">Toggle Debug</button>
+
+<label>
+    <input id="debug" type="checkbox">
+    Debug
+</label>
+<h3>Lower: </h3>
+<label for="lowerH">H</label><input id="lowerH" type="number" min="0" max="255">
+<label for="lowerS">S</label><input id="lowerS" type="number" min="0" max="255">
+<label for="lowerV">V</label><input id="lowerV" type="number" min="0" max="255">
+<h3>Upper: </h3>
+<label for="upperH">H</label><input id="upperH" type="number" min="0" max="255">
+<label for="upperS">S</label><input id="upperS" type="number" min="0" max="255">
+<label for="upperV">V</label><input id="upperV" type="number" min="0" max="255">
+
+<script type="application/javascript">
+    function readVisionConfig() {
+        return $.getJSON('/visionConfig');
+    }
+
+    function updateVisionConfig(data) {
+        return $.ajax('/visionConfig', {
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            method: 'PUT',
+            dataType: 'json'
+        });
+    }
+
+    var debug = $('#debug'),
+            lowerH = $('#lowerH'),
+            lowerS = $('#lowerS'),
+            lowerV = $('#lowerV'),
+            upperH = $('#upperH'),
+            upperS = $('#upperS'),
+            upperV = $('#upperV');
+
+    readVisionConfig()
+            .done(function (config) {
+                console.log(config);
+                debug.val(config.debug);
+                lowerH.val(config.lowerThreshold[0]);
+                lowerS.val(config.lowerThreshold[1]);
+                lowerV.val(config.lowerThreshold[2]);
+                upperH.val(config.upperThreshold[0]);
+                upperS.val(config.upperThreshold[1]);
+                upperV.val(config.upperThreshold[2]);
+            });
+
+    debug.change(function (event) {
+        updateVisionConfig({
+            debug: event.target.checked
+        });
+    });
+
+</script>
 </body>
 </html>

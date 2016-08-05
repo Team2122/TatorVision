@@ -1,0 +1,12 @@
+{
+  "name": "TatorVision",
+  "homepage": "https://github.com/XshadowlynxX/TatorVision",
+  "authors": [
+    "Alex Mikhalev <alexmikhalevalex@gmail.com>"
+  ],
+  "description": "",
+  "license": "MIT",
+  "dependencies": {
+    "jquery": "^3.1.0"
+  }
+}

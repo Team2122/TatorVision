@@ -3,6 +3,7 @@ package org.teamtators.vision.vision
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
+import org.opencv.core.CvException
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
 import org.opencv.videoio.VideoCapture
@@ -74,7 +75,11 @@ class OpenCVCapturer @Inject constructor(
         logger.info("Opened OpenCV camera {}. Starting capturer", config.cameraIndex)
 
         while (running) {
-            capture(videoCapture)
+            try {
+                capture(videoCapture)
+            } catch (e : CvException) {
+                logger.warn("CvException while capturing frame", e)
+            }
         }
     }
 

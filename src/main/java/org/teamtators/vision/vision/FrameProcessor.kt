@@ -5,23 +5,25 @@ import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
+import org.slf4j.Logger
 import org.teamtators.vision.config.Config
+import org.teamtators.vision.config.VisionConfig
 import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.ProcessedFrameEvent
-import org.teamtators.vision.loggerFor
+import org.teamtators.vision.loggerFactory
 import java.util.*
 
 class FrameProcessor @Inject constructor(
-        val _config: Config,
-        val eventBus: EventBus
+        private val _config: Config,
+        private val eventBus: EventBus
 ) {
+    private val config: VisionConfig = _config.vision
+
     companion object {
-        private val logger = loggerFor<FrameProcessor>()
+        private val logger: Logger by loggerFactory()
     }
 
     class ProcessResult(val frame: Mat, val target: Point?)
-
-    private val config = _config.vision
 
     init {
         logger.debug("Registering FrameProcessor")

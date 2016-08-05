@@ -1,12 +1,13 @@
 package org.teamtators.vision.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.google.inject.Inject
 import org.teamtators.vision.loggerFor
 import java.io.File
 
 class ConfigManager @Inject constructor(
-        val objectMapper: ObjectMapper
+        @Yaml val objectMapper: ObjectMapper
 ) {
     companion object {
         private val logger = loggerFor<ConfigManager>()

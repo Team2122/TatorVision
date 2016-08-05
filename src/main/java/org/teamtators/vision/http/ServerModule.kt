@@ -1,6 +1,6 @@
 package org.teamtators.vision.http
 
-import org.teamtators.vision.AbstractKotlinModule
+import org.teamtators.vision.guiceKt.AbstractKotlinModule
 
 class ServerModule : AbstractKotlinModule() {
     override fun configure() {

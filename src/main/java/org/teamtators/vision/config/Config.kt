@@ -15,22 +15,22 @@ class ServerConfig {
 }
 
 class VisionConfig {
-    var cameraIndex = 0
-    var maxFPS = 30
+    var cameraIndex : Int = 0
+    var maxFPS : Int = 30
 
-    var fieldOfView = Size(62.2, 48.8)
-    var offset = Size(0.0, 0.0)
+    var fieldOfView : Size = Size(62.2, 48.8)
+    var offset : Size = Size(0.0, 0.0)
 
-    var lowerThreshold = Scalar(60.0, 150.0, 20.0)
-    var upperThreshold = Scalar(100.0, 255.0, 255.0)
-    var minArea = 1000
-    var maxArea = 100000
-    var arcLengthPercentage = 0.01f
+    var lowerThreshold : Scalar = Scalar(60.0, 150.0, 20.0)
+    var upperThreshold : Scalar = Scalar(100.0, 255.0, 255.0)
+    var minArea : Int = 1000
+    var maxArea : Int = 100000
+    var arcLengthPercentage : Double = 0.01
 
-    var debug = false
+    var debug : Boolean = false
 
-    var inputRes = Size()
-    var streamRes = Size()
+    var inputRes : Size = Size()
+    var streamRes : Size = Size()
 }
 
 class Config {

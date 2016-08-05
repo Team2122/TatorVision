@@ -7,6 +7,8 @@ import org.opencv.core.Size
 class OpenCVModule : SimpleModule {
     constructor() : super() {
         addDeserializer(Size::class.java, SizeDeserializer())
+        addSerializer(Size::class.java, SizeSerializer())
         addDeserializer(Scalar::class.java, ScalarDeserializer())
+        addSerializer(Scalar::class.java, ScalarSerializer())
     }
 }

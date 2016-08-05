@@ -1,19 +1,20 @@
 package org.teamtators.vision
 
 import com.google.common.eventbus.EventBus
-import com.google.inject.Guice
-import com.google.inject.Module
 import org.opencv.core.Core
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import org.teamtators.vision.config.Config
+import org.teamtators.vision.config.ConfigModule
 import org.teamtators.vision.display.DisplayModule
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
+import org.teamtators.vision.guiceKt.childInjector
+import org.teamtators.vision.guiceKt.getInstance
+import org.teamtators.vision.guiceKt.injector
 import org.teamtators.vision.http.ServerModule
 import org.teamtators.vision.tables.TablesModule
 import org.teamtators.vision.vision.VisionModule
-import java.util.*
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -37,7 +38,9 @@ fun main(args: Array<String>) {
 
     logger.info(TATORVISION_HEADER)
 
-    val baseInjector = Guice.createInjector(ConfigModule())
+    val baseInjector = injector {
+        install(ConfigModule())
+    }
     val config = baseInjector.getInstance<Config>()
 
     logger.debug("Using OpenCV Version: {}", Core.VERSION)
@@ -50,19 +53,19 @@ fun main(args: Array<String>) {
     logger.debug("Loading OpenCV native library: {}", opencvLib)
     System.load(opencvLib)
 
-    val modules = ArrayList<Module>()
-    modules.add(VisionModule())
+    val injector = baseInjector.childInjector {
+        install(VisionModule())
 
-    if (config.server.enabled)
-        modules.add(ServerModule())
+        if (config.server.enabled)
+            install(ServerModule())
 
-    if (config.tables.enabled)
-        modules.add(TablesModule())
+        if (config.tables.enabled)
+            install(TablesModule())
 
-    if (config.display)
-        modules.add(DisplayModule())
+        if (config.display)
+            install(DisplayModule())
+    }
 
-    val injector = baseInjector.createChildInjector(modules)
     val eventBus: EventBus = injector.getInstance()
     val executor: ThreadPoolExecutor = injector.getInstance()
 
