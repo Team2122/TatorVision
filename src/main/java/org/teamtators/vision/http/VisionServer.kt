@@ -70,6 +70,7 @@ class VisionServer @Inject constructor(
                         _config.vision = reader.readValue(input)
                         val out = response.getOutputStream()
                         writer.writeValue(out, _config.vision)
+                        logger.debug("Updated vision config with {}");
                     } else {
                         response.setStatus(HttpStatus.METHOD_NOT_ALLOWED_405)
                     }

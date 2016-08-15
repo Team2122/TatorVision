@@ -41,21 +41,23 @@ internal class MjpegHttpHandler @Inject constructor(
     }
 
     private inner class MjpegWriter internal constructor(private val response: Response) {
+        private var finished = false
+
         @Subscribe
         private fun onImage(event: DisplayImageEvent) {
-            if (response.outputBuffer.isClosed) {
-            } else {
-                try {
-                    val out = response.outputStream
-                    writeImage(event.image, out)
-                    return
-                } catch (e: IOException) {
-                    logger.error("Error writing image {}", e.message)
-                }
-
+            if (response.outputBuffer.isClosed || finished)
+                return
+            try {
+                val out = response.outputStream
+                writeImage(event.image, out)
+                return
+            } catch (e: IOException) {
+                logger.error("Error writing image {}", e.message)
             }
+
             logger.debug("Unregistering MjpegWriter")
             eventBus.unregister(this)
+            finished = true
         }
 
         @Throws(IOException::class)

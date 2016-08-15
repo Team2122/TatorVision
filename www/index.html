@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Test</title>
-    <script src="components/jquery/dist/jquery.min.js"></script>
+    <script src="components/jquery/dist/jquery.js"></script>
 </head>
 <body>
-<img src="stream.mjpg">
+<img src="stream.mjpg"><br/>
 
 <label>
     <input id="debug" type="checkbox">
     Debug
 </label>
+<label for="display">Display: </label>
+<select id="display">
+    <option value="NONE">None</option>
+    <option value="INPUT">Input</option>
+    <option value="THRESHOLD">Threshold</option>
+    <option value="CONTOURS">Contours</option>
+</select>
 <h3>Lower: </h3>
 <label for="lowerH">H</label><input id="lowerH" type="number" min="0" max="255">
 <label for="lowerS">S</label><input id="lowerS" type="number" min="0" max="255">
@@ -20,7 +27,6 @@
 <label for="upperH">H</label><input id="upperH" type="number" min="0" max="255">
 <label for="upperS">S</label><input id="upperS" type="number" min="0" max="255">
 <label for="upperV">V</label><input id="upperV" type="number" min="0" max="255">
-
 <script type="application/javascript">
     function readVisionConfig() {
         return $.getJSON('/visionConfig');
@@ -36,6 +42,7 @@
     }
 
     var debug = $('#debug'),
+            display = $('#display'),
             lowerH = $('#lowerH'),
             lowerS = $('#lowerS'),
             lowerV = $('#lowerV'),
@@ -46,7 +53,8 @@
     readVisionConfig()
             .done(function (config) {
                 console.log(config);
-                debug.val(config.debug);
+                debug.prop('checked', config.debug);
+                display.val(config.display);
                 lowerH.val(config.lowerThreshold[0]);
                 lowerS.val(config.lowerThreshold[1]);
                 lowerV.val(config.lowerThreshold[2]);
@@ -60,6 +68,29 @@
             debug: event.target.checked
         });
     });
+
+    display.change(function (event) {
+        updateVisionConfig({
+            display: display.val()
+        })
+    });
+
+    function updateThreshold(key, h, s, v) {
+        var obj = {};
+        obj[key] = [h.val(), s.val(), v.val()];
+        updateVisionConfig(obj);
+    }
+
+    function updateLower() {
+        updateThreshold('lowerThreshold', lowerH, lowerS, lowerV);
+    }
+
+    function updateUpper() {
+        updateThreshold('upperThreshold', upperH, upperS, upperV);
+    }
+
+    lowerH.add(lowerS).add(lowerV).change(updateLower);
+    upperH.add(upperS).add(upperV).change(updateUpper);
 
 </script>
 </body>

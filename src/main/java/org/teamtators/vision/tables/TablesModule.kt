@@ -4,6 +4,6 @@ import org.teamtators.vision.guiceKt.AbstractKotlinModule
 
 class TablesModule : AbstractKotlinModule() {
     override fun configure() {
-        bind<NetworkTablesUpdater>()
+        bind<NetworkTablesUpdater>().asEagerSingleton()
     }
 }
