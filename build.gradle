@@ -56,6 +56,14 @@ dependencies {
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDirs = ['./www']
+        }
+    }
+}
+
 def mainClassName = 'org.teamtators.vision.MainKt'
 
 jar {

@@ -5,9 +5,8 @@ import com.fasterxml.jackson.module.jsonSchema.customProperties.HyperSchemaFacto
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
-import org.glassfish.grizzly.http.server.HttpServer
-import org.glassfish.grizzly.http.server.Request
-import org.glassfish.grizzly.http.server.Response
+import org.glassfish.grizzly.PortRange
+import org.glassfish.grizzly.http.server.*
 import org.teamtators.vision.config.Config
 import org.teamtators.vision.config.VisionConfig
 import org.teamtators.vision.events.StartEvent
@@ -26,10 +25,14 @@ class VisionServer @Inject constructor(
 
     private val config = _config.server
     private val server: HttpServer
+    private val listener: NetworkListener
 
     init {
         logger.debug("Creating and registering VisionServer")
-        server = HttpServer.createSimpleServer("./www", config.port)
+        server = HttpServer()
+        listener = NetworkListener("grizzly", "0.0.0.0", PortRange(config.port))
+        server.addListener(listener)
+
         eventBus.register(this);
     }
 
@@ -65,6 +68,7 @@ class VisionServer @Inject constructor(
             addHttpHandler(mjpegHttpHandler, "/stream.mjpg")
             addHttpHandler(visionConfigHandler, "/visionConfig")
             addHttpHandler(visionConfigSchemaHandler, "/visionConfigSchema")
+            addHttpHandler(CLStaticHttpHandler(javaClass.classLoader, "www/"))
         }
         try {
             server.start()
