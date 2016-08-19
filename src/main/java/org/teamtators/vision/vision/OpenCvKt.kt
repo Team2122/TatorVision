@@ -57,3 +57,7 @@ val Moments.center: Point
     get() = Point(m10 / m00, m01 / m00)
 
 fun Double.round(): Long = Math.round(this)
+
+fun Double.toDegrees(): Double = Math.toDegrees(this)
+
+fun Double.toRadians(): Double = Math.toRadians(this)

@@ -14,7 +14,7 @@ import java.io.OutputStream
 import javax.imageio.ImageIO
 
 
-internal class MjpegHttpHandler @Inject constructor(
+class MjpegHttpHandler @Inject constructor(
         private val eventBus: EventBus
 ) :
         HttpHandler("MjpegHttpHandler") {

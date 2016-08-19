@@ -1,6 +1,5 @@
 package org.teamtators.vision.config
 
-import org.opencv.core.Point
 import org.opencv.core.Scalar
 import org.opencv.core.Size
 
@@ -20,23 +19,25 @@ enum class VisionDisplay {
 }
 
 class VisionConfig {
-    var cameraIndex : Int = 0
-    var maxFPS : Int = 30
+    var cameraIndex: Int = 0
+    var maxFPS: Int = 30
 
-    var fieldOfView : Size = Size(62.2, 48.8)
-    var offset : Point = Point(0.0, 0.0)
+    var fieldOfView: Size = Size(62.2, 48.8)
+    var verticalCameraAngle: Double = 60.0
+    var goalHeight: Double = (8 * 12) - 24.0
+    var horizontalAngleOffset: Double = 0.0
 
-    var lowerThreshold : Scalar = Scalar(60.0, 150.0, 20.0)
-    var upperThreshold : Scalar = Scalar(100.0, 255.0, 255.0)
-    var minArea : Int = 1000
-    var maxArea : Int = 100000
-    var arcLengthPercentage : Double = 0.01
+    var lowerThreshold: Scalar = Scalar(60.0, 150.0, 20.0)
+    var upperThreshold: Scalar = Scalar(100.0, 255.0, 255.0)
+    var minArea: Int = 1000
+    var maxArea: Int = 100000
+    var arcLengthPercentage: Double = 0.01
 
-    var debug : Boolean = false
-    var display : VisionDisplay = VisionDisplay.CONTOURS
+    var debug: Boolean = false
+    var display: VisionDisplay = VisionDisplay.CONTOURS
 
-    var inputRes : Size = Size()
-    var streamRes : Size = Size()
+    var inputRes: Size = Size()
+    var streamRes: Size = Size()
 }
 
 class Config {

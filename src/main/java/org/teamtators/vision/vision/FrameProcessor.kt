@@ -108,8 +108,20 @@ class FrameProcessor @Inject constructor(
         var angle: Double? = null
         if (largestContour != null) {
             val center = largestContour.center
-
+            val height = inputMat.height()
+            val width = inputMat.width()
             target = center
+
+            val verticalGoalAngle = (center.y / height - .5) * config.fieldOfView.height + config.verticalCameraAngle
+            val goalHeight = config.goalHeight
+            distance = goalHeight / Math.tan(verticalGoalAngle.toRadians())
+
+            val widthInches = distance * Math.tan(config.fieldOfView.width.toRadians() / 2) * 2
+            val offsetInches = (center.x / width - .5) * widthInches
+            angle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
+
+            displayMat.drawText("$distance in. $angle deg.", Point(0.0, 0.0), Core.FONT_HERSHEY_SIMPLEX, .5,
+                    Scalar(0.0, 0.0, 0.0))
         }
 
         // Draw crosshair

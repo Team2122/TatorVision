@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/TatorVision.iml" filepath="$PROJECT_DIR$/.idea/modules/TatorVision.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/TatorVision_main.iml" filepath="$PROJECT_DIR$/.idea/modules/TatorVision_main.iml" group="TatorVision" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/TatorVision_test.iml" filepath="$PROJECT_DIR$/.idea/modules/TatorVision_test.iml" group="TatorVision" />
     </modules>
   </component>
 </project>

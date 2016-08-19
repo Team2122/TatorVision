@@ -13,7 +13,6 @@ vision:
   cameraIndex: 0
   fieldOfView: [120.0, 70.0]
 #  fieldOfView: [62.2, 48.8]  #FOV of RPI Camera Module
-  offset: [0.0, 0.0] # angle correction [x, y] in degrees
 
   #lowerThreshold: [60, 100, 100]  #Thresholds are in HSV format
   #upperThreshold: [100, 255, 255]

@@ -1,26 +1,24 @@
 package org.teamtators.vision.http
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.jsonSchema.customProperties.HyperSchemaFactoryWrapper
 import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
-import org.glassfish.grizzly.http.Method
-import org.glassfish.grizzly.http.server.HttpHandler
 import org.glassfish.grizzly.http.server.HttpServer
 import org.glassfish.grizzly.http.server.Request
 import org.glassfish.grizzly.http.server.Response
-import org.glassfish.grizzly.http.util.HttpStatus
 import org.teamtators.vision.config.Config
-import org.teamtators.vision.config.Json
+import org.teamtators.vision.config.VisionConfig
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
+import org.teamtators.vision.guiceKt.injected
 import org.teamtators.vision.loggerFor
 import java.io.IOException
 
 class VisionServer @Inject constructor(
-        private val _config: Config,
-        private val eventBus: EventBus,
-        @Json private val objectMapper: ObjectMapper
+        _config: Config,
+        eventBus: EventBus
 ) {
     companion object {
         private val logger = loggerFor<VisionServer>()
@@ -47,35 +45,26 @@ class VisionServer @Inject constructor(
         this.stop()
     }
 
+    class VisionConfigSchemaHandler : WebHandler() {
+        @set:Inject var objectMapper: ObjectMapper by injected()
+        override fun serve(request: Request, response: Response) {
+            val visitor = HyperSchemaFactoryWrapper()
+            objectMapper.acceptJsonFormatVisitor(VisionConfig::class.java, visitor)
+            val schema = visitor.finalSchema()
+            val out = response.getOutputStream()
+            objectMapper.writer().writeValue(out, schema)
+        }
+    }
+
+    @set:Inject var mjpegHttpHandler: MjpegHttpHandler by injected()
+    @set:Inject var visionConfigHandler: VisionConfigHandler by injected()
+    @set:Inject var visionConfigSchemaHandler: VisionConfigSchemaHandler by injected()
+
     fun start() {
         server.serverConfiguration.apply {
-            addHttpHandler(MjpegHttpHandler(eventBus), "/stream.mjpg")
-            addHttpHandler(object : HttpHandler() {
-                override fun service(request: Request?, response: Response?) {
-                    try {
-                        serve(request!!, response!!)
-                    } catch (e : Throwable) {
-                        logger.error("Error handling HTTP request", e)
-                        response!!.setStatus(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                    }
-                }
-                fun serve(request: Request, response: Response) {
-                    val writer = objectMapper.writer()
-                    if (request.method == Method.GET) {
-                        val out = response.getOutputStream()
-                        writer.writeValue(out, _config.vision)
-                    } else if (request.method == Method.PUT) {
-                        val input = request.getInputStream()
-                        val reader = objectMapper.readerForUpdating(_config.vision)
-                        _config.vision = reader.readValue(input)
-                        val out = response.getOutputStream()
-                        writer.writeValue(out, _config.vision)
-                        logger.debug("Updated vision config with {}");
-                    } else {
-                        response.setStatus(HttpStatus.METHOD_NOT_ALLOWED_405)
-                    }
-                }
-            }, "/visionConfig")
+            addHttpHandler(mjpegHttpHandler, "/stream.mjpg")
+            addHttpHandler(visionConfigHandler, "/visionConfig")
+            addHttpHandler(visionConfigSchemaHandler, "/visionConfigSchema")
         }
         try {
             server.start()
