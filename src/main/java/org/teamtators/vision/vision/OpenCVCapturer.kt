@@ -24,7 +24,6 @@ class OpenCVCapturer @Inject constructor(
 
     private val config = _config.vision
     private var thread: Thread? = null
-    private val fpsCounter: FpsCounter = FpsCounter()
 
     @Volatile
     var running: Boolean = false
@@ -91,10 +90,6 @@ class OpenCVCapturer @Inject constructor(
         videoCapture.read(frame)
         if (inputRes.width > 0 && inputRes.height > 0)
             Imgproc.resize(frame, frame, inputRes)
-
-        val fps = fpsCounter.getFps()
-        if (fps != null)
-            logger.trace("Capture FPS: {}", fps)
 
         eventBus.post(CapturedMatEvent(frame))
     }

@@ -133,7 +133,7 @@ class FrameProcessor @Inject constructor(
         val fps = fpsCounter.getFps()
         if (fps != null) {
             this.fps = fps
-            OpenCVCapturer.logger.trace("Process FPS: {}", fps)
+            logger.trace("Process FPS: {}", fps)
         }
 
         displayMat.drawText("${this.fps}", Point(5.0, 30.0), Core.FONT_HERSHEY_SIMPLEX, 1.0,
