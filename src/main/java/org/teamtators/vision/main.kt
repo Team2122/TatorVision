@@ -67,7 +67,7 @@ fun main(args: Array<String>) {
     }
 
     val eventBus: EventBus = injector.getInstance()
-    val executor: ThreadPoolExecutor = injector.getInstance()
+//    val executor: ThreadPoolExecutor = injector.getInstance()
 
     eventBus.post(StartEvent())
 
@@ -75,11 +75,11 @@ fun main(args: Array<String>) {
         logger.info("Stopping...")
 
         eventBus.post(StopEvent())
-        executor.shutdown()
-        try {
-            executor.awaitTermination(5, TimeUnit.SECONDS)
-        } catch (ignored: InterruptedException) {
-        }
+//        executor.shutdown()
+//        try {
+//            executor.awaitTermination(5, TimeUnit.SECONDS)
+//        } catch (ignored: InterruptedException) {
+//        }
     }
 }
 

@@ -20,6 +20,9 @@ class FrameProcessor @Inject constructor(
 ) {
     private val config: VisionConfig = _config.vision
 
+    private val fpsCounter: FpsCounter = FpsCounter()
+    private var fps : Long = 0
+
     companion object {
         private val logger: Logger by loggerFactory()
     }
@@ -126,6 +129,15 @@ class FrameProcessor @Inject constructor(
 
         // Draw crosshair
         drawCrosshair(displayMat)
+
+        val fps = fpsCounter.getFps()
+        if (fps != null) {
+            this.fps = fps
+            OpenCVCapturer.logger.trace("Process FPS: {}", fps)
+        }
+
+        displayMat.drawText("${this.fps}", Point(5.0, 30.0), Core.FONT_HERSHEY_SIMPLEX, 1.0,
+                Scalar(255.0, 0.0, 0.0))
 
         return ProcessResult(displayMat, target, distance, angle)
     }

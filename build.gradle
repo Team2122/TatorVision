@@ -3,21 +3,23 @@ buildscript {
 
     repositories {
         mavenCentral()
+        jcenter()
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'org.hidetake:gradle-ssh-plugin:2.5.1'
     }
 }
 
 def openCVJavaDir = getProperty("openCVJavaDir")
 
 group 'org.teamtators.vision'
-version '1.0'
 
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'kotlin'
+apply plugin: 'org.hidetake.ssh'
 
 repositories {
     flatDir {
@@ -56,11 +58,11 @@ dependencies {
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
 }
 
-sourceSets {
-    main {
-        resources {
-            srcDirs = ['./www']
-        }
+remotes {
+    tatorVision {
+        host = 'TatorVision.local'
+        user = 'tator'
+        password = 'Team2122'
     }
 }
 
@@ -82,3 +84,13 @@ task run(type: JavaExec) {
 
     systemProperty "tatorvision.opencvjavadir", openCVJavaDir
 }
+
+task deploy << {
+    ssh.run {
+        session(remotes.tatorVision) {
+            put from: files('./config.yml', './build/libs/TatorVision.jar'), to: '~/TatorVision'
+        }
+    }
+}
+
+deploy.dependsOn 'jar'

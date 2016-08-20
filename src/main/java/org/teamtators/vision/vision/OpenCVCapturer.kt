@@ -13,22 +13,18 @@ import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
-import java.util.concurrent.Executor
 
 class OpenCVCapturer @Inject constructor(
-        val _config: Config,
-        val executor: Executor,
+        _config: Config,
         val eventBus: EventBus
 ) {
     companion object {
         val logger = LoggerFactory.getLogger(OpenCVCapturer::class.java)
-        private val S_IN_NS = 1000000000
     }
 
-    private var lastFpsTime: Long = 0
-    private var frames: Long = 0
-
     private val config = _config.vision
+    private var thread: Thread? = null
+    private val fpsCounter: FpsCounter = FpsCounter()
 
     @Volatile
     var running: Boolean = false
@@ -44,8 +40,11 @@ class OpenCVCapturer @Inject constructor(
     }
 
     fun start() {
+        if (running) return
         running = true
-        executor.execute { run() }
+        val t = Thread({ run() })
+        t.start()
+        thread = t
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -56,6 +55,8 @@ class OpenCVCapturer @Inject constructor(
 
     fun stop() {
         running = false
+        thread?.interrupt()
+        thread = null
     }
 
     private fun run() {
@@ -77,7 +78,7 @@ class OpenCVCapturer @Inject constructor(
         while (running) {
             try {
                 capture(videoCapture)
-            } catch (e : CvException) {
+            } catch (e: CvException) {
                 logger.warn("CvException while capturing frame", e)
             }
         }
@@ -91,13 +92,9 @@ class OpenCVCapturer @Inject constructor(
         if (inputRes.width > 0 && inputRes.height > 0)
             Imgproc.resize(frame, frame, inputRes)
 
-        val nowNs = System.nanoTime()
-        if (lastFpsTime <= nowNs - S_IN_NS) {
-            logger.trace("FPS: {}", frames)
-            frames = 0
-            lastFpsTime = nowNs
-        }
-        frames++;
+        val fps = fpsCounter.getFps()
+        if (fps != null)
+            logger.trace("Capture FPS: {}", fps)
 
         eventBus.post(CapturedMatEvent(frame))
     }
