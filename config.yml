@@ -1,7 +1,7 @@
 tables:
   enabled: true
-  #host: "roboRIO-2122-FRC.local"
-  host: "127.0.0.1"
+  host: "roboRIO-2122-FRC.local"
+#  host: "127.0.0.1"
   tableName: "TatorVision"
 
 server:
@@ -11,8 +11,8 @@ server:
 vision:
   maxFPS: 30
   cameraIndex: 0
-  fieldOfView: [120.0, 70.0]
-#  fieldOfView: [62.2, 48.8]  #FOV of RPI Camera Module
+#  fieldOfView: [120.0, 70.0]
+  fieldOfView: [62.2, 48.8]  #FOV of RPI Camera Module
 
   #lowerThreshold: [60, 100, 100]  #Thresholds are in HSV format
   #upperThreshold: [100, 255, 255]

@@ -62,10 +62,10 @@ class NetworkTablesUpdater @Inject constructor(
 
         val result = event.result
         if (visionTable != null) {
-            val x = result.target?.x ?: -1.0
-            val y = result.target?.y ?: -1.0
-            val distance = result.distance ?: -1.0
-            val angle = result.angle ?: -1.0
+            val x = result.target?.x ?: Double.NaN
+            val y = result.target?.y ?: Double.NaN
+            val distance = result.distance ?: Double.NaN
+            val angle = result.angle ?: Double.NaN
             visionTable?.putNumber("x", x);
             visionTable?.putNumber("y", y);
             visionTable?.putNumber("distance", distance);
