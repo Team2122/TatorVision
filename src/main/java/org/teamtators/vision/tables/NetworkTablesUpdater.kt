@@ -64,11 +64,16 @@ class NetworkTablesUpdater @Inject constructor(
             positionTable = null
         }
 
-        val target = event.result.target
-        if (positionTable != null && target != null) {
-            logger.trace("Putting values to position table");
-            positionTable?.putNumber("x", target.x);
-            positionTable?.putNumber("y", target.y);
+        val result = event.result
+        if (positionTable != null) {
+            val x = result.target?.x ?: -1.0
+            val y = result.target?.y ?: -1.0
+            val distance = result.distance ?: -1.0
+            val angle = result.angle ?: -1.0
+            positionTable?.putNumber("x", x);
+            positionTable?.putNumber("y", y);
+            positionTable?.putNumber("distance", distance);
+            positionTable?.putNumber("angle", angle);
         }
     }
 }
