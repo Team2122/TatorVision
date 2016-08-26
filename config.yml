@@ -2,7 +2,7 @@ tables:
   enabled: true
   #host: "roboRIO-2122-FRC.local"
   host: "127.0.0.1"
-  rootName: "TatorVision"
+  tableName: "TatorVision"
 
 server:
   enabled: true

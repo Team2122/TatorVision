@@ -6,7 +6,7 @@ import org.opencv.core.Size
 class TablesConfig {
     var enabled = false
     var host = "roboRIO-2122-FRC.local"
-    var rootName = "TatorVision"
+    var tableName = "TatorVision"
 }
 
 class ServerConfig {

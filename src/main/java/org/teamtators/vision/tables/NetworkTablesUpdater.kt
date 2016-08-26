@@ -17,8 +17,7 @@ class NetworkTablesUpdater @Inject constructor(
 ) {
     val logger = LoggerFactory.getLogger(javaClass)
     private val config = _config.tables
-    private var rootTable: NetworkTable? = null
-    private var positionTable: ITable? = null
+    private var visionTable: NetworkTable? = null
 
     init {
         logger.debug("Registering NetworkTablesUpdater")
@@ -53,27 +52,24 @@ class NetworkTablesUpdater @Inject constructor(
     @Subscribe
     fun updateNetworkTable(event: ProcessedFrameEvent) {
         if (NetworkTable.connections().size > 0) {
-            if (rootTable == null) {
+            if (visionTable == null) {
                 logger.info("Connected to NT server")
-                rootTable = NetworkTable.getTable(config.rootName)
-                positionTable = rootTable?.getSubTable("position")
-                logger.debug("Position table: " + positionTable)
+                visionTable = NetworkTable.getTable(config.tableName)
             }
         } else {
-            rootTable = null
-            positionTable = null
+            visionTable = null
         }
 
         val result = event.result
-        if (positionTable != null) {
+        if (visionTable != null) {
             val x = result.target?.x ?: -1.0
             val y = result.target?.y ?: -1.0
             val distance = result.distance ?: -1.0
             val angle = result.angle ?: -1.0
-            positionTable?.putNumber("x", x);
-            positionTable?.putNumber("y", y);
-            positionTable?.putNumber("distance", distance);
-            positionTable?.putNumber("angle", angle);
+            visionTable?.putNumber("x", x);
+            visionTable?.putNumber("y", y);
+            visionTable?.putNumber("distance", distance);
+            visionTable?.putNumber("angle", angle);
         }
     }
 }
