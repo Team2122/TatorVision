@@ -14,7 +14,7 @@ import javax.swing.WindowConstants
 class VisionDisplay @Inject constructor(
         _config: Config,
         val eventBus: EventBus
-) : JFrame() {
+) : JFrame("TatorVision") {
     companion object {
         val logger = loggerFor<VisionDisplay>()
     }
