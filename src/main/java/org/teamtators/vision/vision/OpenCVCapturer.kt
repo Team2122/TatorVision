@@ -9,10 +9,15 @@ import org.opencv.imgproc.Imgproc
 import org.opencv.videoio.VideoCapture
 import org.opencv.videoio.Videoio
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
+import org.teamtators.vision.util.InputStreamLogger
+import org.teamtators.vision.util.runScript
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class OpenCVCapturer @Inject constructor(
         _config: Config,
@@ -59,9 +64,11 @@ class OpenCVCapturer @Inject constructor(
     }
 
     private fun run() {
+        configureCamera()
+
         val videoCapture = VideoCapture()
         videoCapture.open(config.cameraIndex)//Initialize Video Capture
-        //Runtime.getRuntime().exec(/*v4lctl setup commands*/);
+
         val inputRes = config.inputRes
         if (inputRes.width > 0 && inputRes.height > 0) {
             logger.debug("Setting capture resolution to {}x{}", inputRes.width, inputRes.height)
@@ -81,6 +88,11 @@ class OpenCVCapturer @Inject constructor(
                 logger.warn("CvException while capturing frame", e)
             }
         }
+    }
+
+    private fun configureCamera() {
+        logger.debug("Configuring vision with script ${config.startVisionScript}")
+        runScript(config.startVisionScript)
     }
 
     private fun capture(videoCapture: VideoCapture) {
