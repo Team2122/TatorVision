@@ -13,6 +13,7 @@ buildscript {
 }
 
 def openCVJavaDir = getProperty("openCVJavaDir")
+def tatorVisionHost = getProperty("tatorVisionHost")
 
 group 'org.teamtators.vision'
 
@@ -58,14 +59,6 @@ dependencies {
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
 }
 
-remotes {
-    tatorVision {
-        host = 'TatorVision.local'
-        user = 'tator'
-        password = 'Team2122'
-    }
-}
-
 def mainClassName = 'org.teamtators.vision.MainKt'
 
 jar {
@@ -85,10 +78,25 @@ task run(type: JavaExec) {
     systemProperty "tatorvision.opencvjavadir", openCVJavaDir
 }
 
-task deploy << {
+ssh.settings.knownHosts = ssh.settings.allowAnyHosts
+
+remotes {
+    tatorVision {
+        host = tatorVisionHost
+	user = 'tator'
+        password = 'Team2122'
+    }
+}
+
+def deployDir = '~/TatorVision/'
+
+task deploy(dependsOn: jar, group: 'deploy') << {
     ssh.run {
         session(remotes.tatorVision) {
-            put from: files('./config.yml', './build/libs/TatorVision.jar'), to: '~/TatorVision'
+            println "Deploying to ${remote}"
+            execute "mkdir -p ${deployDir}"
+            put from: files('./config.yml', './startVision.sh'), into: deployDir
+            put from: jar.archivePath, into: deployDir
         }
     }
 }
