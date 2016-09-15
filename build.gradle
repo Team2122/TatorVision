@@ -13,7 +13,7 @@ buildscript {
 }
 
 def openCVJavaDir = getProperty("openCVJavaDir")
-def tatorVisionHost = getProperty("tatorVisionHost")
+def deployHost = getProperty("deployHost")
 
 group 'org.teamtators.vision'
 
@@ -82,13 +82,13 @@ ssh.settings.knownHosts = ssh.settings.allowAnyHosts
 
 remotes {
     tatorVision {
-        host = tatorVisionHost
+        host = deployHost
 	user = 'tator'
         password = 'Team2122'
     }
 }
 
-def deployDir = '~/TatorVision/'
+def deployDir = getProperty("deployDir")
 
 task deploy(dependsOn: jar, group: 'deploy') << {
     ssh.run {
