@@ -14,6 +14,7 @@ buildscript {
 
 def openCVJavaDir = getProperty("openCVJavaDir")
 def deployHost = getProperty("deployHost")
+def deployDir = getProperty("deployDir")
 
 group 'org.teamtators.vision'
 
@@ -83,20 +84,40 @@ ssh.settings.knownHosts = ssh.settings.allowAnyHosts
 remotes {
     tatorVision {
         host = deployHost
-	user = 'tator'
+	    user = 'tator'
         password = 'Team2122'
     }
 }
 
-def deployDir = getProperty("deployDir")
+def remote = remotes.tatorVision
+
+def sudoCommand = { String command ->
+    def password = remote.password
+    "echo ${password} | sudo -S ${command}"
+}
 
 task deploy(dependsOn: jar, group: 'deploy') << {
+    println "Deploying to ${remote}"
     ssh.run {
-        session(remotes.tatorVision) {
-            println "Deploying to ${remote}"
+        session(remote) {
+            println "Stopping TatorVision service"
+            execute sudoCommand("systemctl stop TatorVision")
+            println "Deploying jar and configs"
             execute "mkdir -p ${deployDir}"
             put from: files('./config.yml', './startVision.sh'), into: deployDir
             put from: jar.archivePath, into: deployDir
+            println "Starting TatorVision service"
+            execute sudoCommand("systemctl start TatorVision")
+        }
+    }
+    println "Deploy finished"
+}
+
+task logs(group: 'deploy') << {
+    println("Getting log from ${remote}")
+    ssh.run {
+        session(remote) {
+            execute sudoCommand("journalctl -u TatorVision -n 100 --no-pager")
         }
     }
 }

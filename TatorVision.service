@@ -1,0 +1,12 @@
+[Unit]
+Description=TatorVision service
+After=networking.target
+
+[Service]
+WorkingDirectory=/home/tator/TatorVision/
+ExecStart=/usr/bin/java -jar TatorVision.jar
+Restart=on-abort
+Environment=LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+[Install]
+WantedBy=networking.target
