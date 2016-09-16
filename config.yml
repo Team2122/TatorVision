@@ -9,22 +9,27 @@ server:
   port:  8080
 
 vision:
-  maxFPS: 30
   cameraIndex: 0
-#  fieldOfView: [120.0, 70.0]
-  fieldOfView: [62.2, 48.8]  #FOV of RPI Camera Module
+  maxFPS: 30
 
-  #lowerThreshold: [60, 100, 100]  #Thresholds are in HSV format
-  #upperThreshold: [100, 255, 255]
-  lowerThreshold: [60, 100, 50]  #Thresholds are in HSV format
-  upperThreshold: [100, 255, 255]
+  fieldOfView: [62.2, 48.8] # RPI camera FOV
+  verticalCameraAngle: 60.0 # 60 degrees from horizontal
+  goalHeight: 72 # (8 * 12) - 24.0
+  horizontalAngleOffset: 0.0
+
+  lowerThreshold: [60.0, 150.0, 20.0]
+  upperThreshold: [100.0, 255.0, 255.0]
   minArea: 1000
-  maxArea: 100000 # about 1/3 of the screen size (640x480), does not correspond to # of pixels
-  arcLengthPercentage:  0.01 # determines how much to simplify contours
-  debug:  true  # show debug info on screen/stream
+  maxArea: 100000
+  arcLengthPercentage: 0.01
 
-  inputRes: [ 640, 400 ]
-  streamRes: [ 640, 400 ]
+  debug: false
+  display: CONTOURS
+
+  inputRes: [640, 480]
+  streamRes: [640, 480]
+
+  startVisionScript: String = "/bin/sh ./startVision.sh"
 
 display:  false  #display an image on screen
 
