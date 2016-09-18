@@ -1,7 +1,7 @@
 tables:
   enabled: true
-  host: "roboRIO-212-FRC.local"
-#  host: "127.0.0.1"
+#  host: "roboRIO-212-FRC.local"
+  host: "127.0.0.1"
   tableName: "TatorVision"
 
 server:
@@ -13,14 +13,14 @@ vision:
   maxFPS: 30
 
   fieldOfView: [62.2, 48.8] # RPI camera FOV
-  verticalCameraAngle: 60.0 # 60 degrees from horizontal
+  verticalCameraAngle: 45.0 # degrees from horizontal
   goalHeight: 72 # (8 * 12) - 24.0
   horizontalAngleOffset: 0.0
 
-  lowerThreshold: [60.0, 150.0, 20.0]
-  upperThreshold: [100.0, 255.0, 255.0]
-  minArea: 1000
-  maxArea: 100000
+  lowerThreshold: [0.0, 0.0, 250.0]
+  upperThreshold: [255.0, 3.0, 255.0]
+  minArea: 500
+  maxArea: 3000
   arcLengthPercentage: 0.01
 
   debug: false
@@ -29,7 +29,7 @@ vision:
   inputRes: [640, 480]
   streamRes: [640, 480]
 
-  startVisionScript: String = "/bin/sh ./startVision.sh"
+  startVisionScript: /bin/sh ./startVision.sh
 
 display:  false  #display an image on screen
 

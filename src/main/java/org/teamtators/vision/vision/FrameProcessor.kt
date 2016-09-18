@@ -21,7 +21,7 @@ class FrameProcessor @Inject constructor(
     private val config: VisionConfig = _config.vision
 
     private val fpsCounter: FpsCounter = FpsCounter()
-    private var fps : Long = 0
+    private var fps: Long = 0
 
     companion object {
         private val logger: Logger by loggerFactory()
@@ -88,21 +88,25 @@ class FrameProcessor @Inject constructor(
         // Get information on all contours and filter by area range
         val contours = rawContours
                 .map { getContourInfo(it) }
-                .filter { it.area >= config.minArea && it.area <= config.maxArea }
+                .filter {
+                    it.area >= config.minArea
+                            && it.area <= config.maxArea
+                }
 
         // Find largest contour by area
         val largestContour = contours.maxBy { it.area }
 
         // Draw all contours, with the largest one in a larger thickness
         if (config.display == VisionDisplay.CONTOURS) {
-            displayMat.drawContours(rawContours, color = Scalar(0.0, 255.0, 0.0), thickness = 1, hierarchy = hierarchy)
+            if (config.debug)
+                displayMat.drawContours(rawContours, color = Scalar(0.0, 0.0, 255.0), thickness = 1, hierarchy = hierarchy)
             contours.forEach { contour ->
+                val thickness = if (contour == largestContour) 3 else 1;
+                displayMat.drawContour(contour.contour, color = Scalar(0.0, 255.0, 0.0), thickness = thickness)
                 displayMat.drawCircle(contour.center, 2, Scalar(255.0, 0.0, 0.0))
                 displayMat.drawText(contour.area.round().toString(), contour.center,
                         fontFace = Core.FONT_HERSHEY_SIMPLEX, fontScale = 0.5, color = Scalar(255.0, 0.0, 0.0))
             }
-            if (largestContour != null)
-                displayMat.drawContour(largestContour.contour, color = Scalar(0.0, 255.0, 0.0), thickness = 3)
         }
 
         // Calculate and draw largest contour position
@@ -115,7 +119,7 @@ class FrameProcessor @Inject constructor(
             val width = inputMat.width()
             target = center
 
-            val verticalGoalAngle = (center.y / height - .5) * config.fieldOfView.height + config.verticalCameraAngle
+            val verticalGoalAngle = ((center.y / height.toDouble() - 0.5) * config.fieldOfView.height) + config.verticalCameraAngle
             val goalHeight = config.goalHeight
             distance = goalHeight / Math.tan(verticalGoalAngle.toRadians())
 

@@ -27,6 +27,9 @@
 <label for="upperH">H</label><input id="upperH" type="number" min="0" max="255">
 <label for="upperS">S</label><input id="upperS" type="number" min="0" max="255">
 <label for="upperV">V</label><input id="upperV" type="number" min="0" max="255">
+<h3>Contour Filters:</h3>
+<label for="minArea">Min Area</label><input id="minArea" type="number" min="0">
+<label for="maxArea">Max Area</label><input id="maxArea" type="number" min="0">
 <script type="application/javascript">
     function readVisionConfig() {
         return $.getJSON('/visionConfig');
@@ -48,7 +51,9 @@
             lowerV = $('#lowerV'),
             upperH = $('#upperH'),
             upperS = $('#upperS'),
-            upperV = $('#upperV');
+            upperV = $('#upperV'),
+            minArea = $('#minArea'),
+            maxArea = $('#maxArea');
 
     readVisionConfig()
             .done(function (config) {
@@ -61,6 +66,8 @@
                 upperH.val(config.upperThreshold[0]);
                 upperS.val(config.upperThreshold[1]);
                 upperV.val(config.upperThreshold[2]);
+                minArea.val(config.minArea);
+                maxArea.val(config.maxArea);
             });
 
     debug.change(function (event) {
@@ -91,6 +98,13 @@
 
     lowerH.add(lowerS).add(lowerV).change(updateLower);
     upperH.add(upperS).add(upperV).change(updateUpper);
+
+    minArea.add(maxArea).change(function () {
+        updateVisionConfig({
+            minArea: minArea.val(),
+            maxArea: maxArea.val()
+        });
+    })
 
 </script>
 </body>
