@@ -53,6 +53,7 @@ class FrameProcessor @Inject constructor(
             val contour: MatOfPoint,
             val contour2f: MatOfPoint2f,
             val area: Double,
+            val minRectArea: Double,
             val center: Point
     )
 
@@ -61,10 +62,11 @@ class FrameProcessor @Inject constructor(
         contour.convertTo(contour2f, CvType.CV_32FC2)
         val epsilon = Imgproc.arcLength(contour2f, true) * config.arcLengthPercentage
         Imgproc.approxPolyDP(contour2f, contour2f, epsilon, true)
-        val area = Imgproc.minAreaRect(contour2f).size.area()
+        val area = Imgproc.contourArea(contour2f)
+        val minRectArea = Imgproc.minAreaRect(contour2f).size.area()
         val moments = Imgproc.moments(contour)
         val center = moments.center
-        return ContourInfo(contour, contour2f, area, center)
+        return ContourInfo(contour, contour2f, area, minRectArea, center)
     }
 
     fun process(inputMat: Mat): ProcessResult {
@@ -88,13 +90,10 @@ class FrameProcessor @Inject constructor(
         // Get information on all contours and filter by area range
         val contours = rawContours
                 .map { getContourInfo(it) }
-                .filter {
-                    it.area >= config.minArea
-                            && it.area <= config.maxArea
-                }
+                .filter { (it.minRectArea >= config.minArea && it.minRectArea <= config.maxArea) && ((it.area / it.minRectArea) <= config.minAreaToBoundsPercentage) }
 
         // Find largest contour by area
-        val largestContour = contours.maxBy { it.area }
+        val largestContour = contours.maxBy { it.minRectArea }
 
         // Draw all contours, with the largest one in a larger thickness
         if (config.display == VisionDisplay.CONTOURS) {

@@ -33,6 +33,7 @@ class VisionConfig {
     var minArea: Int = 1000
     var maxArea: Int = 100000
     var arcLengthPercentage: Double = 0.01
+    var minAreaToBoundsPercentage = 0.5
 
     var debug: Boolean = false
     var display: VisionDisplay = VisionDisplay.CONTOURS
