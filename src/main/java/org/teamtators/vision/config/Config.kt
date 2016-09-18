@@ -22,6 +22,7 @@ class VisionConfig {
     var cameraIndex: Int = 0
     var maxFPS: Int = 30
 
+    var upsideDown: Boolean = false
     var fieldOfView: Size = Size(62.2, 48.8)
     var verticalCameraAngle: Double = 60.0
     var goalHeight: Double = (8 * 12) - 24.0
