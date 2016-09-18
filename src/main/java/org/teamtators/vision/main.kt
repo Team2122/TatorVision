@@ -15,8 +15,6 @@ import org.teamtators.vision.guiceKt.injector
 import org.teamtators.vision.http.ServerModule
 import org.teamtators.vision.tables.TablesModule
 import org.teamtators.vision.vision.VisionModule
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 
 private val TATORVISION_HEADER = "\n" +
         "┌─────────────────────────────┐\n" +
@@ -45,10 +43,23 @@ fun main(args: Array<String>) {
 
     logger.debug("Using OpenCV Version: {}", Core.VERSION)
 
+    val os = System.getProperty("os.name")
     var opencvJavaDir: String? = System.getProperty("tatorvision.opencvjavadir")
-    if (opencvJavaDir == null)
-        opencvJavaDir = "/usr/local/share/OpenCV/java"
-    val opencvLib = String.format("%s/lib%s.so", opencvJavaDir, Core.NATIVE_LIBRARY_NAME)
+    var opencvLib: String? = null
+    if (os.startsWith("Windows")) {
+        if (opencvJavaDir == null) {
+            val arch = when (System.getProperty("os.arch")) {
+                "amd64", "x64" -> "x64"
+                else -> "x86"
+            }
+            opencvJavaDir = "C:\\OpenCV\\java\\$arch\\"
+        }
+        opencvLib = "${opencvJavaDir}${Core.NATIVE_LIBRARY_NAME}.dll"
+    } else {
+        if (opencvJavaDir == null)
+            opencvJavaDir = "/usr/local/share/OpenCV/java/"
+        opencvLib = "${opencvJavaDir}lib${Core.NATIVE_LIBRARY_NAME}.so"
+    }
 
     logger.debug("Loading OpenCV native library: {}", opencvLib)
     System.load(opencvLib)
