@@ -43,10 +43,15 @@ class VisionConfig {
     var startVisionScript: String = "/bin/sh ./startVision.sh"
 }
 
+class VideoConfig {
+    var outputPath: String = "./vlogs" //no separator at end
+}
+
 class Config {
     var tables: TablesConfig = TablesConfig()
     var server: ServerConfig = ServerConfig()
     var vision: VisionConfig = VisionConfig()
+    var video: VideoConfig = VideoConfig()
 
     var display = false
 }
