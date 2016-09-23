@@ -66,19 +66,14 @@ class OpenCVCapturer @Inject constructor(
             videoCapture.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, inputRes.width)
             videoCapture.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, inputRes.height)
         }
+        videoCapture.set(Videoio.CV_CAP_PROP_BUFFERSIZE, 1.0)
         if (!videoCapture.isOpened) {
             logger.error("Error opening OpenCV camera {}", config.cameraIndex)
             System.exit(1)
         }
         logger.info("Opened OpenCV camera {}. Starting capturer", config.cameraIndex)
 
-        while (running) {
-            try {
-                capture(videoCapture)
-            } catch (e: CvException) {
-                logger.warn("CvException while capturing frame", e)
-            }
-        }
+        return videoCapture
     }
 
     fun configureCamera(script: String) {

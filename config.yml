@@ -18,17 +18,19 @@ vision:
   goalHeight: 72 # (8 * 12) - 24.0
   horizontalAngleOffset: 0.0
 
-  lowerThreshold: [50.0, 5.0, 75.0]
+  lowerThreshold: [50.0, 2.0, 75.0]
   upperThreshold: [100.0, 255.0, 255.0]
-  minArea: 1000
-  maxArea: 5000
+  minArea: 500
+  maxArea: 7500
   arcLengthPercentage: 0.01
 
   debug: false
   display: CONTOURS
 
-  inputRes: [640, 480]
-  streamRes: [640, 480]
+#  inputRes: [640, 480]
+#  streamRes: [640, 480]
+  inputRes: [320, 240]
+  streamRes: [320, 240]
 
   startVisionScript: >
     v4l2-ctl -c auto_exposure=1 -c exposure_time_absolute=5
