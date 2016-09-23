@@ -4,7 +4,6 @@ import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
 import edu.wpi.first.wpilibj.networktables.NetworkTable
-import edu.wpi.first.wpilibj.tables.ITable
 import org.slf4j.LoggerFactory
 import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.ProcessedFrameEvent
@@ -18,6 +17,7 @@ class NetworkTablesUpdater @Inject constructor(
     val logger = LoggerFactory.getLogger(javaClass)
     private val config = _config.tables
     private var visionTable: NetworkTable? = null
+    private var frameNumber: Int = 0
 
     init {
         logger.debug("Registering NetworkTablesUpdater")
@@ -38,6 +38,7 @@ class NetworkTablesUpdater @Inject constructor(
 
 
     fun start() {
+        frameNumber = 0
         NetworkTable.setClientMode()
         NetworkTable.setIPAddress(config.host)
         logger.debug("Attempting to connect to NT server at \"{}\"", config.host)
@@ -66,10 +67,12 @@ class NetworkTablesUpdater @Inject constructor(
             val y = result.target?.y ?: Double.NaN
             val distance = result.distance ?: Double.NaN
             val angle = result.angle ?: Double.NaN
+            visionTable?.putNumber("frameNumber", frameNumber.toDouble())
             visionTable?.putNumber("x", x);
             visionTable?.putNumber("y", y);
             visionTable?.putNumber("distance", distance);
             visionTable?.putNumber("angle", angle);
         }
+        frameNumber++
     }
 }
