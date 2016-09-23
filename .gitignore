@@ -23,3 +23,6 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
+
+# Allow each computer to have it's own gradle.properties
+gradle.properties
