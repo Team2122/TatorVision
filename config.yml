@@ -32,5 +32,8 @@ vision:
 
   startVisionScript: /bin/sh ./startVision.sh
 
+video:
+  outputPath: "./vlogs"
+
 display:  false  #display an image on screen
 
