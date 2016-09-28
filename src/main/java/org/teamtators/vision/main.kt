@@ -2,6 +2,7 @@ package org.teamtators.vision
 
 import com.google.common.eventbus.EventBus
 import org.opencv.core.Core
+import org.opencv.core.Mat
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import org.teamtators.vision.config.Config
@@ -14,6 +15,7 @@ import org.teamtators.vision.guiceKt.getInstance
 import org.teamtators.vision.guiceKt.injector
 import org.teamtators.vision.http.ServerModule
 import org.teamtators.vision.tables.TablesModule
+import org.teamtators.vision.vision.Raspicam
 import org.teamtators.vision.vision.VisionModule
 
 private val TATORVISION_HEADER = "\n" +
@@ -35,6 +37,12 @@ fun main(args: Array<String>) {
     val logger = LoggerFactory.getLogger("main")
 
     logger.info(TATORVISION_HEADER)
+
+    val raspicam = Raspicam.RaspiCam()
+    raspicam.open()
+    raspicam.grab()
+    val data = CharArray(10)
+    raspicam.retrieve(data, 0)
 
     val baseInjector = injector {
         install(ConfigModule())

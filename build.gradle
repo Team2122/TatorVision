@@ -35,6 +35,10 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    javaCpp
+}
+
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
 
@@ -43,6 +47,8 @@ dependencies {
 
     compile group: 'org.opencv', name: 'opencv-310'
     files 'libopencv_java310.so'
+    compile group: 'org.bytedeco', name: 'javacpp', version: '1.2.4'
+    javaCpp group: 'org.bytedeco', name: 'javacpp', version: '1.2.4'
 
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
     compile group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.21'
@@ -58,6 +64,21 @@ dependencies {
     compile group: 'org.glassfish.grizzly', name: 'grizzly-http-server', version: '2.3.25'
     compile group: 'com.google.guava', name: 'guava', version: '19.0'
     compile group: 'com.google.inject', name: 'guice', version: '4.1.0'
+}
+
+task buildJavaCpp(dependsOn: 'classes', group: 'build') << {
+    println 'javacpp'
+    javaexec {
+        classpath configurations.javaCpp
+        main 'org.bytedeco.javacpp.tools.Builder'
+        args '-cp', compileJava.destinationDir, 'org.teamtators.vision.vision.Raspicam',
+                '-properties', 'linux-armhf',
+                '-Dplatform.includepath=' + file('./raspicam/src').absolutePath,
+                '-Dplatform.root=/usr/local/armv8-rpi3-linux-gnueabihf',
+                '-Dplatform.compiler=/usr/local/armv8-rpi3-linux-gnueabihf/bin/armv8-rpi3-linux-gnueabihf-g++'
+//                '-d', 'libs/armeabi'
+    }
+    println 'javacpp done'
 }
 
 def mainClassName = 'org.teamtators.vision.MainKt'
@@ -84,7 +105,7 @@ ssh.settings.knownHosts = ssh.settings.allowAnyHosts
 remotes {
     tatorVision {
         host = deployHost
-	    user = 'tator'
+        user = 'tator'
         password = 'Team2122'
     }
 }
