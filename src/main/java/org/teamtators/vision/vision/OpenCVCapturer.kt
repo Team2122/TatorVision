@@ -19,13 +19,15 @@ class OpenCVCapturer @Inject constructor(
         _config: Config,
         val eventBus: EventBus,
         val executor: ExecutorService,
-        val processRunner: ProcessRunner
+        val processRunner: ProcessRunner,
+        var timer1: Long
 ) {
     companion object {
         val logger = LoggerFactory.getLogger(OpenCVCapturer::class.java)
     }
 
     private val config = _config.vision
+    private val profilerConfig = _config.profiler
 
     @Volatile
     var running: Boolean = false
@@ -57,14 +59,18 @@ class OpenCVCapturer @Inject constructor(
     }
 
     private fun run() {
+        timer1 = System.nanoTime()
         val videoCapture = VideoCapture()
         videoCapture.open(config.cameraIndex)//Initialize Video Capture
+        if (profilerConfig.logToConsole) logger.debug("Initialize Video Capture:\t" + System.nanoTime().minus(timer1));
 
         val inputRes = config.inputRes
         if (inputRes.width > 0 && inputRes.height > 0) {
+            timer1 = System.nanoTime()
             logger.debug("Setting capture resolution to {}x{}", inputRes.width, inputRes.height)
             videoCapture.set(Videoio.CV_CAP_PROP_FRAME_WIDTH, inputRes.width)
             videoCapture.set(Videoio.CV_CAP_PROP_FRAME_HEIGHT, inputRes.height)
+            if (profilerConfig.logToConsole) logger.debug("Set Capture Settings:\t" + System.nanoTime().minus(timer1));
         }
         if (!videoCapture.isOpened) {
             logger.error("Error opening OpenCV camera {}", config.cameraIndex)
@@ -95,12 +101,25 @@ class OpenCVCapturer @Inject constructor(
         val inputRes = config.inputRes
 
         processRunner.writeToFrame { frame ->
+            var timer2: Long
+            timer1 = System.nanoTime()
+            timer2 = System.nanoTime()
             videoCapture.grab()
+            if (profilerConfig.logToConsole) logger.debug("Frame Grab:\t" + System.nanoTime().minus(timer1));
+            timer1 = System.nanoTime()
             videoCapture.retrieve(frame)
-            if (inputRes.width > 0 && inputRes.height > 0)
+            if (profilerConfig.logToConsole) logger.debug("Convert to contour2f:\t" + System.nanoTime().minus(timer1));
+            if (inputRes.width > 0 && inputRes.height > 0) {
+                timer1 = System.nanoTime()
                 Imgproc.resize(frame, frame, inputRes)
-            if (config.upsideDown)
+                if (profilerConfig.logToConsole) logger.debug("Resize Frame:\t" + System.nanoTime().minus(timer1));
+            }
+            if (config.upsideDown) {
+                timer1 = System.nanoTime()
                 Core.flip(frame, frame, -1)
+                if (profilerConfig.logToConsole) logger.debug("Flip Frame:\t" + System.nanoTime().minus(timer1));
+            }
+            if (profilerConfig.logToConsole) logger.debug("Capture Frame (Total):\t" + System.nanoTime().minus(timer2));
         }
     }
 }

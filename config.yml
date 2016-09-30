@@ -33,5 +33,8 @@ vision:
   startVisionScript: >
     v4l2-ctl -c auto_exposure=1 -c exposure_time_absolute=5
 
+profiler:
+  logToConsole: true
+
 display:  false  #display an image on screen
 

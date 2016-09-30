@@ -43,10 +43,14 @@ class VisionConfig {
     var startVisionScript: String = "true"
 }
 
+class ProfilerConfig {
+    var logToConsole = true
+}
+
 class Config {
     var tables: TablesConfig = TablesConfig()
     var server: ServerConfig = ServerConfig()
     var vision: VisionConfig = VisionConfig()
-
+    var profiler: ProfilerConfig = ProfilerConfig()
     var display = false
 }

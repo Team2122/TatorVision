@@ -7,11 +7,13 @@ import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 import org.slf4j.Logger
 import org.teamtators.vision.config.Config
+import org.teamtators.vision.config.ProfilerConfig
 import org.teamtators.vision.config.VisionConfig
 import org.teamtators.vision.config.VisionDisplay
 import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.ProcessedFrameEvent
 import org.teamtators.vision.loggerFactory
+import org.yaml.snakeyaml.util.ArrayStack
 import java.util.*
 
 private val overlayColor = Scalar(255.0, 255.0, 255.0)
@@ -21,9 +23,12 @@ class FrameProcessor @Inject constructor(
         private val eventBus: EventBus
 ) {
     private val config: VisionConfig = _config.vision
+    private val profilerConfig = _config.profiler
 
     private val fpsCounter: FpsCounter = FpsCounter()
     private var fps: Long = 0
+
+    //private var timers: HashMap<String, ArrayList<Long>> = HashMap<String, ArrayList<Long>>()
 
     companion object {
         private val logger: Logger by loggerFactory()
@@ -34,6 +39,17 @@ class FrameProcessor @Inject constructor(
     init {
         logger.debug("Registering FrameProcessor")
         eventBus.register(this)
+
+        //timers.put("Convert to contour2f", ArrayList<Long>())
+        //timers.put("Approximate Contours", ArrayList<Long>())
+        //timers.put("Calculate Contour Info", ArrayList<Long>())
+        //timers.put("Erode/Dilate", ArrayList<Long>())
+        //timers.put("Convert Image and Threshold", ArrayList<Long>())
+        //timers.put("Filter Contours by Area", ArrayList<Long>())
+        //timers.put("Find Largest Contour", ArrayList<Long>())
+        //timers.put("Draw Debug Data", ArrayList<Long>())
+        //timers.put("Calculate Distance", ArrayList<Long>())
+        //timers.put("Calculate Angle Offset", ArrayList<Long>())
     }
 
     private val erodeKernel = Imgproc.getStructuringElement(Imgproc.MORPH_ERODE, Size(2.0, 2.0))
@@ -59,13 +75,23 @@ class FrameProcessor @Inject constructor(
     )
 
     private fun getContourInfo(contour: MatOfPoint): ContourInfo {
+        var timer1: Long
+        timer1 = System.nanoTime()
         val contour2f = MatOfPoint2f()
         contour.convertTo(contour2f, CvType.CV_32FC2)
+        //timers.get("Convert to contour2f")?.add(timer1 - System.nanoTime())
+        if (profilerConfig.logToConsole) logger.debug("Convert to contour2f:\t" + System.nanoTime().minus(timer1));
+        timer1 = System.nanoTime()
         val epsilon = Imgproc.arcLength(contour2f, true) * config.arcLengthPercentage
         Imgproc.approxPolyDP(contour2f, contour2f, epsilon, true)
+        //timers.get("Approximate Contours")?.add(timer1 - System.nanoTime())
+        if (profilerConfig.logToConsole) logger.debug("Approximate Contours:\t" + System.nanoTime().minus(timer1));
+        timer1 = System.nanoTime()
         val area = Imgproc.minAreaRect(contour2f).size.area()
         val moments = Imgproc.moments(contour)
         val center = moments.center
+        //timers.get("Calculate Contour Info")?.add(timer1 - System.nanoTime())
+        if (profilerConfig.logToConsole) logger.debug("Calculate Contour Info:\t" + System.nanoTime().minus(timer1));
         return ContourInfo(contour, contour2f, area, center)
     }
 
@@ -80,14 +106,22 @@ class FrameProcessor @Inject constructor(
         }
 
     fun process(inputMat: Mat): ProcessResult {
+        var timer1: Long
         if (config.display == VisionDisplay.INPUT || config.display == VisionDisplay.CONTOURS)
             displayMat = inputMat
 
+        timer1 = System.nanoTime()
         Imgproc.erode(inputMat, hsvMat, erodeKernel, Point(), 3);
         Imgproc.dilate(hsvMat, hsvMat, dilateKernel, Point(), 2);
+        //timers.get("Erode/Dilate")?.add(timer1 - System.nanoTime())
+        if (profilerConfig.logToConsole) logger.debug("Erode / Dilate:\t" + System.nanoTime().minus(timer1));
 
+        timer1 = System.nanoTime()
         Imgproc.cvtColor(hsvMat, hsvMat, Imgproc.COLOR_BGR2HSV)
         Core.inRange(hsvMat, config.lowerThreshold, config.upperThreshold, thresholdMat)
+        //timers.get("Convert Image and Threshold")?.add(timer1 - System.nanoTime())
+        if (profilerConfig.logToConsole) logger.debug("Convert Image and Threshold:\t" + System.nanoTime().minus(timer1));
+
         if (config.display == VisionDisplay.THRESHOLD)
             displayMat = thresholdMat
 
@@ -96,19 +130,26 @@ class FrameProcessor @Inject constructor(
         Imgproc.findContours(thresholdMat, rawContours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_TC89_L1)
 
         // Get information on all contours and filter by area range
+        timer1 = System.nanoTime()
         val contours = rawContours
                 .map { getContourInfo(it) }
                 .filter {
                     it.area >= config.minArea
                             && it.area <= config.maxArea
                 }
+        //timers.get("Filter Contours by Area")?.add(timer1 - System.nanoTime())
+        if (profilerConfig.logToConsole) logger.debug("Filter Contours by Area:\t" + System.nanoTime().minus(timer1));
 
         // Find largest contour by area
+        timer1 = System.nanoTime()
         val largestContour = contours.maxBy { it.area }
+        //timers.get("Find Largest Contour")?.add(timer1 - System.nanoTime())
+        if (profilerConfig.logToConsole) logger.debug("Find Largest Contour:\t" + System.nanoTime().minus(timer1));
 
         // Draw all contours, with the largest one in a larger thickness
         if (config.display == VisionDisplay.CONTOURS) {
             if (config.debug)
+                timer1 = System.nanoTime();
                 displayMat.drawContours(rawContours, color = Scalar(0.0, 0.0, 255.0), thickness = 1, hierarchy = hierarchy)
             contours.forEach { contour ->
                 val thickness = if (contour == largestContour) 3 else 1;
@@ -116,6 +157,8 @@ class FrameProcessor @Inject constructor(
                 displayMat.drawCircle(contour.center, 2, Scalar(255.0, 0.0, 0.0))
                 displayMat.drawText(contour.area.round().toString(), contour.center,
                         fontFace = Core.FONT_HERSHEY_SIMPLEX, fontScale = 0.5, color = Scalar(255.0, 0.0, 0.0))
+                //timers.get("Draw Debug Data")?.add(timer1 - System.nanoTime())
+                if (profilerConfig.logToConsole) logger.debug("Draw Debug Data:\t" + System.nanoTime().minus(timer1));
             }
         }
 
@@ -129,13 +172,17 @@ class FrameProcessor @Inject constructor(
             val width = inputMat.width()
             target = center
 
+            timer1 = System.nanoTime()
             val verticalGoalAngle = (-(center.y / height.toDouble() - 0.5) * config.fieldOfView.height) + config.verticalCameraAngle
             val goalHeight = config.goalHeight
             distance = goalHeight / Math.tan(verticalGoalAngle.toRadians())
+            //timers.get("Calculate Distance")?.add(timer1 - System.nanoTime())
 
+            timer1 = System.nanoTime()
             val widthInches = distance * Math.tan(config.fieldOfView.width.toRadians() / 2) * 2
             val offsetInches = (center.x / width - .5) * widthInches
             angle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
+            //timers.get("Calculate Angle Offset")?.add(timer1 - System.nanoTime())
 
             displayMat.drawText("$distance in. $angle deg.", Point(0.0, 0.0), Core.FONT_HERSHEY_SIMPLEX, .5,
                     overlayColor)
