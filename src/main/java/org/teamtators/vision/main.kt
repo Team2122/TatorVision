@@ -2,7 +2,7 @@ package org.teamtators.vision
 
 import com.google.common.eventbus.EventBus
 import org.opencv.core.Core
-import org.opencv.core.Mat
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import org.teamtators.vision.config.Config
@@ -12,9 +12,11 @@ import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
 import org.teamtators.vision.guiceKt.childInjector
 import org.teamtators.vision.guiceKt.getInstance
+import org.teamtators.vision.guiceKt.injected
 import org.teamtators.vision.guiceKt.injector
 import org.teamtators.vision.http.ServerModule
 import org.teamtators.vision.tables.TablesModule
+import org.teamtators.vision.util.runScript
 import org.teamtators.vision.vision.Raspicam
 import org.teamtators.vision.vision.VisionModule
 
@@ -37,12 +39,6 @@ fun main(args: Array<String>) {
     val logger = LoggerFactory.getLogger("main")
 
     logger.info(TATORVISION_HEADER)
-
-    val raspicam = Raspicam.RaspiCam()
-    raspicam.open()
-    raspicam.grab()
-    val data = CharArray(10)
-    raspicam.retrieve(data, 0)
 
     val baseInjector = injector {
         install(ConfigModule())
@@ -72,8 +68,16 @@ fun main(args: Array<String>) {
     logger.debug("Loading OpenCV native library: {}", opencvLib)
     System.load(opencvLib)
 
+    val isArm = System.getProperty("os.arch").startsWith("arm") || true
+    if (isArm) {
+        logger.debug("Using rpi capturer. Loading JNI library")
+        Raspicam.RaspiCam.init()
+    }
+    else
+        logger.debug("Using OpenCV capturer")
+
     val injector = baseInjector.childInjector {
-        install(VisionModule())
+        install(VisionModule(isArm))
 
         if (config.server.enabled)
             install(ServerModule())

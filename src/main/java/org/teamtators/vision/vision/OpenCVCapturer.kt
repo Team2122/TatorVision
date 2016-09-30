@@ -5,27 +5,27 @@ import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
 import org.opencv.core.Core
 import org.opencv.core.CvException
-import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
 import org.opencv.videoio.VideoCapture
 import org.opencv.videoio.Videoio
 import org.slf4j.LoggerFactory
 import org.teamtators.vision.config.Config
-import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
 import org.teamtators.vision.util.runScript
+import java.util.concurrent.ExecutorService
 
 class OpenCVCapturer @Inject constructor(
         _config: Config,
-        val eventBus: EventBus
+        val eventBus: EventBus,
+        val executor: ExecutorService,
+        val processRunner: ProcessRunner
 ) {
     companion object {
         val logger = LoggerFactory.getLogger(OpenCVCapturer::class.java)
     }
 
     private val config = _config.vision
-    private var thread: Thread? = null
 
     @Volatile
     var running: Boolean = false
@@ -43,9 +43,7 @@ class OpenCVCapturer @Inject constructor(
     fun start() {
         if (running) return
         running = true
-        val t = Thread({ run() })
-        t.start()
-        thread = t
+        executor.submit { run() }
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -56,13 +54,9 @@ class OpenCVCapturer @Inject constructor(
 
     fun stop() {
         running = false
-        thread?.interrupt()
-        thread = null
     }
 
     private fun run() {
-        configureCamera()
-
         val videoCapture = VideoCapture()
         videoCapture.open(config.cameraIndex)//Initialize Video Capture
 
@@ -87,36 +81,26 @@ class OpenCVCapturer @Inject constructor(
         }
     }
 
-    private fun configureCamera() {
+    fun configureCamera(script: String) {
         val os = System.getProperty("os.name")
         if (os.startsWith("Windows")) {
             logger.info("Running on Windows, so not configuring vision")
         } else {
-            logger.debug("Configuring vision with script ${config.startVisionScript}")
-            runScript(config.startVisionScript)
+            logger.debug("Configuring vision with script $script")
+            runScript(script)
         }
     }
 
     private fun capture(videoCapture: VideoCapture) {
         val inputRes = config.inputRes
 
-        var startTime = System.nanoTime()
-        for (i in 1..10) {
+        processRunner.writeToFrame { frame ->
             videoCapture.grab()
-            val endTime = System.nanoTime()
-            val elapsed = endTime - startTime
-            startTime = endTime
-            if (elapsed >= 10000000)
-                break;
+            videoCapture.retrieve(frame)
+            if (inputRes.width > 0 && inputRes.height > 0)
+                Imgproc.resize(frame, frame, inputRes)
+            if (config.upsideDown)
+                Core.flip(frame, frame, -1)
         }
-
-        val frame = Mat()
-        videoCapture.retrieve(frame)
-        if (inputRes.width > 0 && inputRes.height > 0)
-            Imgproc.resize(frame, frame, inputRes)
-        if (config.upsideDown)
-            Core.flip(frame, frame, -1)
-
-        eventBus.post(CapturedMatEvent(frame))
     }
 }

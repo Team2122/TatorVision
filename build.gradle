@@ -117,7 +117,7 @@ def sudoCommand = { String command ->
     "echo ${password} | sudo -S ${command}"
 }
 
-task deploy(dependsOn: jar, group: 'deploy') << {
+task deployRestart(dependsOn: jar, group: 'deploy') << {
     println "Deploying to ${remote}"
     ssh.run {
         session(remote) {
@@ -125,7 +125,7 @@ task deploy(dependsOn: jar, group: 'deploy') << {
             execute sudoCommand("systemctl stop TatorVision")
             println "Deploying jar and configs"
             execute "mkdir -p ${deployDir}"
-            put from: files('./config.yml', './startVision.sh'), into: deployDir
+            put from: files('./config.yml'), into: deployDir
             put from: jar.archivePath, into: deployDir
             println "Starting TatorVision service"
             execute sudoCommand("systemctl start TatorVision")

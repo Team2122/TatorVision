@@ -14,8 +14,10 @@ import org.teamtators.vision.events.ProcessedFrameEvent
 import org.teamtators.vision.loggerFactory
 import java.util.*
 
+private val overlayColor = Scalar(255.0, 255.0, 255.0)
+
 class FrameProcessor @Inject constructor(
-        private val _config: Config,
+        _config: Config,
         private val eventBus: EventBus
 ) {
     private val config: VisionConfig = _config.vision
@@ -67,23 +69,31 @@ class FrameProcessor @Inject constructor(
         return ContourInfo(contour, contour2f, area, center)
     }
 
+    var displayMat = Mat.zeros(config.inputRes, CvType.CV_8UC3)
+    val hsvMat = Mat.zeros(config.inputRes, CvType.CV_8UC3)
+    val thresholdMat = Mat.zeros(config.inputRes, CvType.CV_8UC1)
+
+    private val scalar: Scalar
+        get() {
+            val crosshairColor = overlayColor
+            return crosshairColor
+        }
+
     fun process(inputMat: Mat): ProcessResult {
-        val displayMat = Mat.zeros(inputMat.size(), inputMat.type())
-
         if (config.display == VisionDisplay.INPUT || config.display == VisionDisplay.CONTOURS)
-            inputMat.copyTo(displayMat)
+            displayMat = inputMat
 
-        Imgproc.erode(inputMat, inputMat, erodeKernel, Point(), 3);
-        Imgproc.dilate(inputMat, inputMat, dilateKernel, Point(), 2);
+        Imgproc.erode(inputMat, hsvMat, erodeKernel, Point(), 3);
+        Imgproc.dilate(hsvMat, hsvMat, dilateKernel, Point(), 2);
 
-        Imgproc.cvtColor(inputMat, inputMat, Imgproc.COLOR_BGR2HSV)
-        Core.inRange(inputMat, config.lowerThreshold, config.upperThreshold, inputMat)
+        Imgproc.cvtColor(hsvMat, hsvMat, Imgproc.COLOR_BGR2HSV)
+        Core.inRange(hsvMat, config.lowerThreshold, config.upperThreshold, thresholdMat)
         if (config.display == VisionDisplay.THRESHOLD)
-            inputMat.copyTo(displayMat)
+            displayMat = thresholdMat
 
         val hierarchy = Mat()
         val rawContours = ArrayList<MatOfPoint>()
-        Imgproc.findContours(inputMat, rawContours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_TC89_L1)
+        Imgproc.findContours(thresholdMat, rawContours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_TC89_L1)
 
         // Get information on all contours and filter by area range
         val contours = rawContours
@@ -128,7 +138,7 @@ class FrameProcessor @Inject constructor(
             angle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
 
             displayMat.drawText("$distance in. $angle deg.", Point(0.0, 0.0), Core.FONT_HERSHEY_SIMPLEX, .5,
-                    Scalar(0.0, 0.0, 0.0))
+                    overlayColor)
         }
 
         // Draw crosshair
@@ -141,7 +151,7 @@ class FrameProcessor @Inject constructor(
         }
 
         displayMat.drawText("${this.fps}", Point(5.0, 30.0), Core.FONT_HERSHEY_SIMPLEX, 1.0,
-                Scalar(255.0, 0.0, 0.0))
+                overlayColor)
 
         return ProcessResult(displayMat, target, distance, angle)
     }
@@ -150,9 +160,8 @@ class FrameProcessor @Inject constructor(
         val center = mat.size().toPoint() / 2.0
         val width = mat.size().width
         val height = mat.size().height
-        val crosshairColor = Scalar(0.0, 0.0, 255.0)
-        mat.drawCenterRect(center, 25, 25, crosshairColor)   //to be replaced with corrected targeting values
-        mat.drawLine(Point(0.0, center.y), Point(width, center.y), crosshairColor)
-        mat.drawLine(Point(center.x, 0.0), Point(center.x, height), crosshairColor)
+        mat.drawCenterRect(center, 25, 25, overlayColor)   //to be replaced with corrected targeting values
+        mat.drawLine(Point(0.0, center.y), Point(width, center.y), overlayColor)
+        mat.drawLine(Point(center.x, 0.0), Point(center.x, height), overlayColor)
     }
 }

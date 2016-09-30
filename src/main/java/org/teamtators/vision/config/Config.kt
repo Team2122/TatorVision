@@ -40,7 +40,7 @@ class VisionConfig {
     var inputRes: Size = Size()
     var streamRes: Size = Size()
 
-    var startVisionScript: String = "/bin/sh ./startVision.sh"
+    var startVisionScript: String = "true"
 }
 
 class Config {

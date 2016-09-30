@@ -4,10 +4,11 @@ import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.inject.Inject
 import org.teamtators.vision.events.StopEvent
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.ThreadPoolExecutor
 
 class ExecutorShutdown @Inject constructor(
-        val executor: ThreadPoolExecutor,
+        val executor: ExecutorService,
         val eventBus: EventBus
 ) {
     init {
