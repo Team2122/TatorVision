@@ -89,7 +89,7 @@ class FrameProcessor @Inject constructor(
         Imgproc.cvtColor(hsvMat, hsvMat, Imgproc.COLOR_BGR2HSV)
         Core.inRange(hsvMat, config.lowerThreshold, config.upperThreshold, thresholdMat)
         if (config.display == VisionDisplay.THRESHOLD)
-            displayMat = thresholdMat
+            displayMat = thresholdMat.clone()
 
         val hierarchy = Mat()
         val rawContours = ArrayList<MatOfPoint>()

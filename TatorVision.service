@@ -9,4 +9,4 @@ Restart=on-abort
 Environment=LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
 [Install]
-WantedBy=networking.target
+WantedBy=network.target

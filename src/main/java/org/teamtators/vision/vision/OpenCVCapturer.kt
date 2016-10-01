@@ -57,6 +57,8 @@ class OpenCVCapturer @Inject constructor(
     }
 
     private fun run() {
+        configureCamera(config.startVisionScript)
+
         val videoCapture = VideoCapture()
         videoCapture.open(config.cameraIndex)//Initialize Video Capture
 
@@ -73,7 +75,13 @@ class OpenCVCapturer @Inject constructor(
         }
         logger.info("Opened OpenCV camera {}. Starting capturer", config.cameraIndex)
 
-        return videoCapture
+        while (running) {
+            try {
+                capture(videoCapture)
+            } catch (e : Throwable) {
+                logger.error("Unhandled exception while capturing frame", e)
+            }
+        }
     }
 
     fun configureCamera(script: String) {
@@ -89,8 +97,11 @@ class OpenCVCapturer @Inject constructor(
     private fun capture(videoCapture: VideoCapture) {
         val inputRes = config.inputRes
 
-        processRunner.writeToFrame { frame ->
+        for (i in (0..2)) {
             videoCapture.grab()
+        }
+
+        processRunner.writeToFrame { frame ->
             videoCapture.retrieve(frame)
             if (inputRes.width > 0 && inputRes.height > 0)
                 Imgproc.resize(frame, frame, inputRes)

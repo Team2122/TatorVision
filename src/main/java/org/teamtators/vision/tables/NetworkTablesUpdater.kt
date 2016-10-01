@@ -67,11 +67,11 @@ class NetworkTablesUpdater @Inject constructor(
             val y = result.target?.y ?: Double.NaN
             val distance = result.distance ?: Double.NaN
             val angle = result.angle ?: Double.NaN
-            visionTable?.putNumber("frameNumber", frameNumber.toDouble())
             visionTable?.putNumber("x", x);
             visionTable?.putNumber("y", y);
             visionTable?.putNumber("distance", distance);
             visionTable?.putNumber("angle", angle);
+            visionTable?.putNumber("frameNumber", frameNumber.toDouble())
         }
         frameNumber++
     }

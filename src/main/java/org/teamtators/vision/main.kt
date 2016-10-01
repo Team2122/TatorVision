@@ -68,7 +68,7 @@ fun main(args: Array<String>) {
     logger.debug("Loading OpenCV native library: {}", opencvLib)
     System.load(opencvLib)
 
-    val isArm = System.getProperty("os.arch").startsWith("arm") || true
+    val isArm = System.getProperty("os.arch").startsWith("arm") && false
     if (isArm) {
         logger.debug("Using rpi capturer. Loading JNI library")
         Raspicam.RaspiCam.init()

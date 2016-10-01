@@ -117,7 +117,7 @@ def sudoCommand = { String command ->
     "echo ${password} | sudo -S ${command}"
 }
 
-task deployRestart(dependsOn: jar, group: 'deploy') << {
+task deploy(dependsOn: jar, group: 'deploy') << {
     println "Deploying to ${remote}"
     ssh.run {
         session(remote) {
