@@ -86,13 +86,13 @@ class FrameProcessor @Inject constructor(
         if (config.display == VisionDisplay.INPUT || config.display == VisionDisplay.CONTOURS)
             displayMat = inputMat
 
-        val erodeStart = System.nanoTime()
-        Imgproc.erode(inputMat, hsvMat, erodeKernel, Point(), 3);
-        Imgproc.dilate(hsvMat, hsvMat, dilateKernel, Point(), 2);
-
         val thresholdStart = System.nanoTime()
-        Imgproc.cvtColor(hsvMat, hsvMat, Imgproc.COLOR_BGR2HSV)
+        Imgproc.cvtColor(inputMat, hsvMat, Imgproc.COLOR_BGR2HSV)
         Core.inRange(hsvMat, config.lowerThreshold, config.upperThreshold, thresholdMat)
+
+        val erodeStart = System.nanoTime()
+//        Imgproc.erode(thresholdMat, thresholdMat, erodeKernel, Point(), 3);
+//        Imgproc.dilate(thresholdMat, thresholdMat, dilateKernel, Point(), 2);
         if (config.display == VisionDisplay.THRESHOLD)
             displayMat = thresholdMat.clone()
 
@@ -165,15 +165,15 @@ class FrameProcessor @Inject constructor(
 
         if (_config.profile) {
             val scale = 1
-            val erodeTime = (thresholdStart - erodeStart) / scale
-            val thresholdTime = (contoursStart - thresholdStart) / scale
+            val thresholdTime = (erodeStart - thresholdStart) / scale
+            val erodeTime = (contoursStart - erodeStart) / scale
             val contoursTime = (filterContoursStart - contoursStart) / scale
             val filterContoursTime = (drawStart - filterContoursStart) / scale
             val drawTime = (calculateStart - drawStart) / scale
             val calculateTime = (calculateEnd - calculateStart) / scale
             val totalTime = (calculateEnd - erodeStart) / scale
-            logger.trace("erode: {}, threshold: {}, contours: {}, filter: {}, draw: {}, calculate: {}, total: {}",
-                    erodeTime, thresholdTime, contoursTime, filterContoursTime, drawTime, calculateTime, totalTime)
+            logger.trace("threshold: {}, erode: {}, contours: {}, filter: {}, draw: {}, calculate: {}, total: {}",
+                    thresholdTime, erodeTime, contoursTime, filterContoursTime, drawTime, calculateTime, totalTime)
         }
 
 
