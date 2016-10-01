@@ -16,7 +16,7 @@ import org.teamtators.vision.util.runScript
 import java.util.concurrent.ExecutorService
 
 class OpenCVCapturer @Inject constructor(
-        _config: Config,
+        val _config: Config,
         val eventBus: EventBus,
         val executor: ExecutorService,
         val processRunner: ProcessRunner
@@ -97,16 +97,26 @@ class OpenCVCapturer @Inject constructor(
     private fun capture(videoCapture: VideoCapture) {
         val inputRes = config.inputRes
 
+        val captureStart = System.nanoTime()
         for (i in (0..2)) {
             videoCapture.grab()
         }
 
         processRunner.writeToFrame { frame ->
+            videoCapture.grab()
+            val processStart = System.nanoTime()
             videoCapture.retrieve(frame)
-            if (inputRes.width > 0 && inputRes.height > 0)
+            if (inputRes.width > 0 && inputRes.height > 0) {
                 Imgproc.resize(frame, frame, inputRes)
-            if (config.upsideDown)
+            }
+            if (config.upsideDown) {
                 Core.flip(frame, frame, -1)
+            }
+            val processEnd = System.nanoTime()
+            val captureTime = (processStart - captureStart) / 1000000000.0
+            val processTime = (processEnd - processStart) / 1000000000.0
+            if (_config.profile)
+                logger.debug("captureTime: {}, processTime: {}", captureTime, processTime);
         }
     }
 }

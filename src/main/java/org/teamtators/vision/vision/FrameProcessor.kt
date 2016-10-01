@@ -17,7 +17,7 @@ import java.util.*
 private val overlayColor = Scalar(255.0, 255.0, 255.0)
 
 class FrameProcessor @Inject constructor(
-        _config: Config,
+        val _config: Config,
         private val eventBus: EventBus
 ) {
     private val config: VisionConfig = _config.vision
@@ -83,18 +83,22 @@ class FrameProcessor @Inject constructor(
         if (config.display == VisionDisplay.INPUT || config.display == VisionDisplay.CONTOURS)
             displayMat = inputMat
 
+        val erodeStart = System.nanoTime()
         Imgproc.erode(inputMat, hsvMat, erodeKernel, Point(), 3);
         Imgproc.dilate(hsvMat, hsvMat, dilateKernel, Point(), 2);
 
+        val thresholdStart = System.nanoTime()
         Imgproc.cvtColor(hsvMat, hsvMat, Imgproc.COLOR_BGR2HSV)
         Core.inRange(hsvMat, config.lowerThreshold, config.upperThreshold, thresholdMat)
         if (config.display == VisionDisplay.THRESHOLD)
             displayMat = thresholdMat.clone()
 
+        val contoursStart = System.nanoTime()
         val hierarchy = Mat()
         val rawContours = ArrayList<MatOfPoint>()
         Imgproc.findContours(thresholdMat, rawContours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_TC89_L1)
 
+        val filterContoursStart = System.nanoTime()
         // Get information on all contours and filter by area range
         val contours = rawContours
                 .map { getContourInfo(it) }
@@ -106,6 +110,7 @@ class FrameProcessor @Inject constructor(
         // Find largest contour by area
         val largestContour = contours.maxBy { it.area }
 
+        val drawStart = System.nanoTime()
         // Draw all contours, with the largest one in a larger thickness
         if (config.display == VisionDisplay.CONTOURS) {
             if (config.debug)
@@ -119,6 +124,19 @@ class FrameProcessor @Inject constructor(
             }
         }
 
+        // Draw crosshair
+        drawCrosshair(displayMat)
+
+        val fps = fpsCounter.getFps()
+        if (fps != null) {
+            this.fps = fps
+            logger.trace("Process FPS: {}", fps)
+        }
+
+        displayMat.drawText("${this.fps}", Point(5.0, 30.0), Core.FONT_HERSHEY_SIMPLEX, 1.0,
+                overlayColor)
+
+        val calculateStart = System.nanoTime()
         // Calculate and draw largest contour position
         var target: Point? = null
         var distance: Double? = null
@@ -140,18 +158,21 @@ class FrameProcessor @Inject constructor(
             displayMat.drawText("$distance in. $angle deg.", Point(0.0, 0.0), Core.FONT_HERSHEY_SIMPLEX, .5,
                     overlayColor)
         }
+        val calculateEnd = System.nanoTime()
 
-        // Draw crosshair
-        drawCrosshair(displayMat)
-
-        val fps = fpsCounter.getFps()
-        if (fps != null) {
-            this.fps = fps
-            logger.trace("Process FPS: {}", fps)
+        if (_config.profile) {
+            val nsPerS = 1000000000.0
+            val erodeTime = (thresholdStart - erodeStart) / nsPerS
+            val thresholdTime = (contoursStart - thresholdStart) / nsPerS
+            val contoursTime = (filterContoursStart - contoursStart) / nsPerS
+            val filterContoursTime = (drawStart - filterContoursStart) / nsPerS
+            val drawTime = (calculateStart - drawStart) / nsPerS
+            val calculateTime = (calculateEnd - calculateStart) / nsPerS
+            val totalTime = (calculateEnd - erodeStart) / nsPerS
+            logger.trace("erode: {}, threshold: {}, contours: {}, filter: {}, draw: {}, calculate: {}, total: {}",
+                    erodeTime, thresholdTime, contoursTime, filterContoursTime, drawTime, calculateTime, totalTime)
         }
 
-        displayMat.drawText("${this.fps}", Point(5.0, 30.0), Core.FONT_HERSHEY_SIMPLEX, 1.0,
-                overlayColor)
 
         return ProcessResult(displayMat, target, distance, angle)
     }
@@ -161,7 +182,7 @@ class FrameProcessor @Inject constructor(
         val width = mat.size().width
         val height = mat.size().height
         mat.drawCenterRect(center, 25, 25, overlayColor)   //to be replaced with corrected targeting values
-        mat.drawLine(Point(0.0, center.y), Point(width, center.y), overlayColor)
+//        mat.drawLine(Point(0.0, center.y), Point(width, center.y), overlayColor)
         mat.drawLine(Point(center.x, 0.0), Point(center.x, height), overlayColor)
     }
 }
