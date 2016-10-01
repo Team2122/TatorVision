@@ -50,6 +50,11 @@ class NetworkTablesUpdater @Inject constructor(
         NetworkTable.shutdown()
     }
 
+    fun getTurretAngle(): Double {
+        val visionTable = this.visionTable
+        return visionTable?.getNumber("turretAngle", Double.NaN) ?: Double.NaN
+    }
+
     @Subscribe
     fun updateNetworkTable(event: ProcessedFrameEvent) {
         if (NetworkTable.connections().size > 0) {
@@ -66,11 +71,13 @@ class NetworkTablesUpdater @Inject constructor(
             val x = result.target?.x ?: Double.NaN
             val y = result.target?.y ?: Double.NaN
             val distance = result.distance ?: Double.NaN
-            val angle = result.angle ?: Double.NaN
+            val offsetAngle = result.offsetAngle ?: Double.NaN
+            val newAngle = result.newAngle ?: Double.NaN
             visionTable?.putNumber("x", x);
             visionTable?.putNumber("y", y);
             visionTable?.putNumber("distance", distance);
-            visionTable?.putNumber("angle", angle);
+            visionTable?.putNumber("offsetAngle", offsetAngle);
+            visionTable?.putNumber("newAngle", newAngle);
             visionTable?.putNumber("frameNumber", frameNumber.toDouble())
         }
         frameNumber++

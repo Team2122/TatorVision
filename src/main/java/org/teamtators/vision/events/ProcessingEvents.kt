@@ -1,10 +1,11 @@
 package org.teamtators.vision.events
 
-import org.opencv.core.Mat
 import org.teamtators.vision.vision.FrameProcessor
+import org.teamtators.vision.vision.MatCaptureData
+import org.teamtators.vision.vision.ProcessRunner
 import java.awt.image.BufferedImage
 
-class CapturedMatEvent(val mat: Mat)
+class CapturedMatEvent(val matCapture: MatCaptureData)
 
 class ProcessedFrameEvent(val result: FrameProcessor.ProcessResult)
 

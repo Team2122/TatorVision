@@ -83,7 +83,7 @@ public class Raspicam {
     @Name("RaspiCam")
     public static class RaspiCam {
         public static void init() {
-            Loader.load();
+            Loader.load(RaspiCam.class);
         }
 
         public RaspiCam() {

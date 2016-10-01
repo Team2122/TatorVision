@@ -10,14 +10,12 @@ import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.CapturedMatEvent
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
-import org.teamtators.vision.util.readWriteLocked
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.locks.ReadWriteLock
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.withLock
 
-private val MAT_BUFFER_SIZE = 2
+private val MAT_BUFFER_SIZE = 3
 private val MAT_TYPE = CvType.CV_8UC3
 
 class ProcessRunner @Inject constructor(
@@ -29,25 +27,25 @@ class ProcessRunner @Inject constructor(
         val logger = LoggerFactory.getLogger(ProcessRunner::class.java)
     }
 
-    private val rwLock: ReadWriteLock = ReentrantReadWriteLock()
-    private val readLock = rwLock.readLock()
-    private val writeLock = rwLock.writeLock()
-
     private val config = _config.vision
-    private val frameBuffer: Array<Mat> = makeFrameBuffer()
-    var currentFrame: Int by readWriteLocked(rwLock, 0)
 
-    val nextWritableFrame: Int
-        get() = if (currentFrame + 1 >= frameBuffer.size) 0 else currentFrame + 1
+    val captureQueue: BlockingQueue<MatCaptureData> = ArrayBlockingQueue(MAT_BUFFER_SIZE, false, makeFrameBuffer())
+    val processQueue: BlockingQueue<MatCaptureData> = ArrayBlockingQueue(1, false)
 
-    fun getFrame(index : Int) = frameBuffer[index]
-
-    private fun makeFrameBuffer() = Array(MAT_BUFFER_SIZE, { Mat.zeros(config.inputRes, CvType.CV_8UC3) })
+    private fun makeFrameBuffer() = Array(MAT_BUFFER_SIZE, {
+        MatCaptureData(Mat.zeros(config.inputRes, MAT_TYPE))
+    }).asList()
 
     val running = AtomicBoolean(false)
 
     init {
         eventBus.register(this)
+    }
+
+    fun reset() {
+        captureQueue.clear()
+        captureQueue.addAll(makeFrameBuffer())
+        processQueue.clear()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -58,6 +56,7 @@ class ProcessRunner @Inject constructor(
 
     fun start() {
         if (!running.compareAndSet(false, true)) return
+        reset()
         executor.submit { run() }
     }
 
@@ -69,19 +68,21 @@ class ProcessRunner @Inject constructor(
 
     fun stop() = running.set(false)
 
-    inline fun writeToFrame(f: (Mat) -> Unit) {
-        val nextFrame = nextWritableFrame
-        f(getFrame(nextFrame))
-        currentFrame = nextFrame
+    inline fun tryWriteNextFrame(f: (MatCaptureData) -> Unit): Boolean {
+        val frame = captureQueue.poll()
+        if (frame == null || processQueue.remainingCapacity() == 0) return false
+        f(frame)
+        processQueue.put(frame)
+        return true
     }
 
     private fun run() {
         logger.debug("Starting process runner")
         while (running.get()) {
-            readLock.withLock {
-                val frame = frameBuffer[currentFrame]
-                eventBus.post(CapturedMatEvent(frame))
-            }
+            val frame = processQueue.take()
+            eventBus.post(CapturedMatEvent(frame))
+            captureQueue.put(frame)
         }
     }
+
 }

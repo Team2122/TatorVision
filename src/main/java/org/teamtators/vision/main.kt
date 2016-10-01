@@ -2,7 +2,6 @@ package org.teamtators.vision
 
 import com.google.common.eventbus.EventBus
 import org.opencv.core.Core
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 import org.teamtators.vision.config.Config
@@ -12,11 +11,9 @@ import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
 import org.teamtators.vision.guiceKt.childInjector
 import org.teamtators.vision.guiceKt.getInstance
-import org.teamtators.vision.guiceKt.injected
 import org.teamtators.vision.guiceKt.injector
 import org.teamtators.vision.http.ServerModule
 import org.teamtators.vision.tables.TablesModule
-import org.teamtators.vision.util.runScript
 import org.teamtators.vision.vision.Raspicam
 import org.teamtators.vision.vision.VisionModule
 
@@ -49,7 +46,7 @@ fun main(args: Array<String>) {
 
     val os = System.getProperty("os.name")
     var opencvJavaDir: String? = System.getProperty("tatorvision.opencvjavadir")
-    var opencvLib: String? = null
+    val opencvLib: String
     if (os.startsWith("Windows")) {
         if (opencvJavaDir == null) {
             val arch = when (System.getProperty("os.arch")) {

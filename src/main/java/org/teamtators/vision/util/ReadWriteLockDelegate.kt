@@ -1,26 +1,23 @@
 package org.teamtators.vision.util
 
-import java.util.concurrent.locks.ReadWriteLock
-import kotlin.concurrent.withLock
-import kotlin.properties.Delegates
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-class ReadWriteLockDelegate<T : Any>(val readWriteLock: ReadWriteLock, initial : T) : ReadWriteProperty<Any?, T> {
+class ReadWriteLockDelegate<T : Any>(val readWriteLock: ReentrantReadWriteLock, initial: T) : ReadWriteProperty<Any?, T> {
     var value: T = initial
 
     operator override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) =
-            readWriteLock.writeLock().withLock {
+            readWriteLock.write {
                 this.value = value
             }
 
 
     operator override fun getValue(thisRef: Any?, property: KProperty<*>): T =
-            readWriteLock.readLock().withLock {
+            readWriteLock.read {
                 this.value
             }
 
 }
-
-fun <T : Any> readWriteLocked(readWriteLock: ReadWriteLock, initial : T): ReadWriteProperty<Any?, T> =
-        ReadWriteLockDelegate(readWriteLock, initial)

@@ -133,6 +133,7 @@ task deploy(dependsOn: jar, group: 'deploy') << {
     }
     println "Deploy finished"
 }
+deploy.dependsOn 'jar'
 
 task logs(group: 'deploy') << {
     println("Getting log from ${remote}")
@@ -142,5 +143,3 @@ task logs(group: 'deploy') << {
         }
     }
 }
-
-deploy.dependsOn 'jar'

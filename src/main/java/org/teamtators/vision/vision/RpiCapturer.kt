@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.teamtators.vision.config.Config
 import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
+import org.teamtators.vision.tables.NetworkTablesUpdater
 import org.teamtators.vision.vision.Raspicam.RaspiCam
 import java.util.concurrent.ExecutorService
 
@@ -14,7 +15,8 @@ class RpiCapturer @Inject constructor(
         _config: Config,
         val eventBus: EventBus,
         val executor: ExecutorService,
-        val processRunner: ProcessRunner
+        val processRunner: ProcessRunner,
+        val networkTablesUpdater: NetworkTablesUpdater
 ) {
     companion object {
         val logger = LoggerFactory.getLogger(RpiCapturer::class.java)
@@ -93,9 +95,11 @@ class RpiCapturer @Inject constructor(
         val bufferSize = videoCapture.getImageTypeSize(format)
         val buffer = ByteArray(bufferSize)
         videoCapture.retrieve(buffer, format)
+        val turretAngle = networkTablesUpdater.getTurretAngle()
 
-        processRunner.writeToFrame { frame ->
-            frame.put(0, 0, buffer)
+        processRunner.tryWriteNextFrame { captureData ->
+            captureData.frame.put(0, 0, buffer)
+            captureData.turretAngle = turretAngle
         }
     }
 }

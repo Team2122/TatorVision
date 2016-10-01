@@ -29,7 +29,8 @@ class FrameProcessor @Inject constructor(
         private val logger: Logger by loggerFactory()
     }
 
-    class ProcessResult(val frame: Mat, val target: Point?, val distance: Double?, val angle: Double?)
+    class ProcessResult(val frame: Mat, val target: Point?, val distance: Double?, val offsetAngle: Double?,
+                        val newAngle: Double?)
 
     init {
         logger.debug("Registering FrameProcessor")
@@ -43,7 +44,7 @@ class FrameProcessor @Inject constructor(
     fun processCapturedMat(event: CapturedMatEvent) {
         val result: ProcessResult
         try {
-            result = process(event.mat)
+            result = process(event.matCapture)
         } catch(e: Exception) {
             logger.error("Exception thrown during processing of frame", e)
             return
@@ -79,7 +80,9 @@ class FrameProcessor @Inject constructor(
             return crosshairColor
         }
 
-    fun process(inputMat: Mat): ProcessResult {
+    fun process(captureData: MatCaptureData): ProcessResult {
+        val inputMat = captureData.frame
+
         if (config.display == VisionDisplay.INPUT || config.display == VisionDisplay.CONTOURS)
             displayMat = inputMat
 
@@ -130,7 +133,8 @@ class FrameProcessor @Inject constructor(
         val fps = fpsCounter.getFps()
         if (fps != null) {
             this.fps = fps
-            logger.trace("Process FPS: {}", fps)
+            if (config.debug)
+                logger.trace("Process FPS: {}", fps)
         }
 
         displayMat.drawText("${this.fps}", Point(5.0, 30.0), Core.FONT_HERSHEY_SIMPLEX, 1.0,
@@ -140,7 +144,8 @@ class FrameProcessor @Inject constructor(
         // Calculate and draw largest contour position
         var target: Point? = null
         var distance: Double? = null
-        var angle: Double? = null
+        var offsetAngle: Double? = null
+        var newAngle: Double? = null
         if (largestContour != null) {
             val center = largestContour.center
             val height = inputMat.height()
@@ -153,10 +158,8 @@ class FrameProcessor @Inject constructor(
 
             val widthInches = distance * Math.tan(config.fieldOfView.width.toRadians() / 2) * 2
             val offsetInches = (center.x / width - .5) * widthInches
-            angle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
-
-            displayMat.drawText("$distance in. $angle deg.", Point(0.0, 0.0), Core.FONT_HERSHEY_SIMPLEX, .5,
-                    overlayColor)
+            offsetAngle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
+            newAngle = captureData.turretAngle + offsetAngle
         }
         val calculateEnd = System.nanoTime()
 
@@ -174,12 +177,12 @@ class FrameProcessor @Inject constructor(
         }
 
 
-        return ProcessResult(displayMat, target, distance, angle)
+        return ProcessResult(displayMat, target, distance, offsetAngle, newAngle)
     }
 
     private fun drawCrosshair(mat: Mat) {
         val center = mat.size().toPoint() / 2.0
-        val width = mat.size().width
+//        val width = mat.size().width
         val height = mat.size().height
         mat.drawCenterRect(center, 25, 25, overlayColor)   //to be replaced with corrected targeting values
 //        mat.drawLine(Point(0.0, center.y), Point(width, center.y), overlayColor)
