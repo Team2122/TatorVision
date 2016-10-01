@@ -78,7 +78,7 @@ class OpenCVCapturer @Inject constructor(
         while (running) {
             try {
                 capture(videoCapture)
-            } catch (e : Throwable) {
+            } catch (e: Throwable) {
                 logger.error("Unhandled exception while capturing frame", e)
             }
         }
@@ -98,14 +98,11 @@ class OpenCVCapturer @Inject constructor(
         val inputRes = config.inputRes
 
         val captureStart = System.nanoTime()
-        for (i in (0..2)) {
-            videoCapture.grab()
-        }
+        videoCapture.grab()
 
         processRunner.writeToFrame { frame ->
-            videoCapture.grab()
-            val processStart = System.nanoTime()
             videoCapture.retrieve(frame)
+            val processStart = System.nanoTime()
             if (inputRes.width > 0 && inputRes.height > 0) {
                 Imgproc.resize(frame, frame, inputRes)
             }
@@ -113,8 +110,9 @@ class OpenCVCapturer @Inject constructor(
                 Core.flip(frame, frame, -1)
             }
             val processEnd = System.nanoTime()
-            val captureTime = (processStart - captureStart) / 1000000000.0
-            val processTime = (processEnd - processStart) / 1000000000.0
+            val scale = 1
+            val captureTime = (processStart - captureStart) / scale
+            val processTime = (processEnd - processStart) / scale
             if (_config.profile)
                 logger.debug("captureTime: {}, processTime: {}", captureTime, processTime);
         }

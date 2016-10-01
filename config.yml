@@ -27,8 +27,8 @@ vision:
   debug: false
   display: CONTOURS
 
-#  inputRes: [640, 480]
-#  streamRes: [640, 480]
+#  inputRes: [1920, 1080]
+#  streamRes: [1920, 1080]
   inputRes: [320, 240]
   streamRes: [320, 240]
 

@@ -161,14 +161,14 @@ class FrameProcessor @Inject constructor(
         val calculateEnd = System.nanoTime()
 
         if (_config.profile) {
-            val nsPerS = 1000000000.0
-            val erodeTime = (thresholdStart - erodeStart) / nsPerS
-            val thresholdTime = (contoursStart - thresholdStart) / nsPerS
-            val contoursTime = (filterContoursStart - contoursStart) / nsPerS
-            val filterContoursTime = (drawStart - filterContoursStart) / nsPerS
-            val drawTime = (calculateStart - drawStart) / nsPerS
-            val calculateTime = (calculateEnd - calculateStart) / nsPerS
-            val totalTime = (calculateEnd - erodeStart) / nsPerS
+            val scale = 1
+            val erodeTime = (thresholdStart - erodeStart) / scale
+            val thresholdTime = (contoursStart - thresholdStart) / scale
+            val contoursTime = (filterContoursStart - contoursStart) / scale
+            val filterContoursTime = (drawStart - filterContoursStart) / scale
+            val drawTime = (calculateStart - drawStart) / scale
+            val calculateTime = (calculateEnd - calculateStart) / scale
+            val totalTime = (calculateEnd - erodeStart) / scale
             logger.trace("erode: {}, threshold: {}, contours: {}, filter: {}, draw: {}, calculate: {}, total: {}",
                     erodeTime, thresholdTime, contoursTime, filterContoursTime, drawTime, calculateTime, totalTime)
         }
