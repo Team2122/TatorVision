@@ -16,10 +16,10 @@ vision:
   fieldOfView: [62.2, 48.8] # RPI camera FOV
   verticalCameraAngle: 45.0 # degrees from horizontal
   goalHeight: 72 # (8 * 12) - 24.0
-  horizontalAngleOffset: 0.0
+  horizontalAngleOffset: 1.0
 
-  lowerThreshold: [50.0, 10.0, 30.0]
-  upperThreshold: [100.0, 255.0, 100.0]
+  lowerThreshold: [50.0, 10.0, 90.0]
+  upperThreshold: [90.0, 255.0, 125.0]
   minArea: 500
   maxArea: 7500
   arcLengthPercentage: 0.01
@@ -27,13 +27,13 @@ vision:
   debug: false
   display: CONTOURS
 
-#  inputRes: [1920, 1080]
-#  streamRes: [1920, 1080]
-  inputRes: [320, 240]
-  streamRes: [320, 240]
+  inputRes: [640, 480]
+  streamRes: [640, 480]
+#  inputRes: [320, 240]
+#  streamRes: [320, 240]
 
   startVisionScript: >
-    v4l2-ctl -c auto_exposure=1 -c exposure_time_absolute=3 -c saturation=100
+    v4l2-ctl -c auto_exposure=1 -c exposure_time_absolute=10 -c saturation=100
 
 profile: false
 
