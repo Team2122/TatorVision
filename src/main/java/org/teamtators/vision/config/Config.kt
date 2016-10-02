@@ -2,6 +2,7 @@ package org.teamtators.vision.config
 
 import org.opencv.core.Scalar
 import org.opencv.core.Size
+import org.teamtators.vision.vision.Polynomial
 
 class TablesConfig {
     var enabled = false
@@ -24,8 +25,7 @@ class VisionConfig {
 
     var upsideDown: Boolean = false
     var fieldOfView: Size = Size(62.2, 48.8)
-    var verticalCameraAngle: Double = 60.0
-    var goalHeight: Double = (8 * 12) - 24.0
+    var distancePoly: Polynomial = Polynomial()
     var horizontalAngleOffset: Double = 0.0
 
     var lowerThreshold: Scalar = Scalar(60.0, 150.0, 20.0)

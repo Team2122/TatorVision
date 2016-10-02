@@ -152,9 +152,7 @@ class FrameProcessor @Inject constructor(
             val width = inputMat.width()
             target = center
 
-            val verticalGoalAngle = (-(center.y / height.toDouble() - 0.5) * config.fieldOfView.height) + config.verticalCameraAngle
-            val goalHeight = config.goalHeight
-            distance = goalHeight / Math.tan(verticalGoalAngle.toRadians())
+            distance = config.distancePoly.calculate(center.y / height.toDouble())
 
             val widthInches = distance * Math.tan(config.fieldOfView.width.toRadians() / 2) * 2
             val offsetInches = (center.x / width - .5) * widthInches

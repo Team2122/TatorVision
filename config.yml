@@ -14,12 +14,11 @@ vision:
 
   upsideDown: true
   fieldOfView: [62.2, 48.8] # RPI camera FOV
-  verticalCameraAngle: 45.0 # degrees from horizontal
-  goalHeight: 72 # (8 * 12) - 24.0
+  distancePoly: { a: 247.79, b: -139.49, c: 110.84 }
   horizontalAngleOffset: 1.0
 
-  lowerThreshold: [50.0, 10.0, 90.0]
-  upperThreshold: [90.0, 255.0, 125.0]
+  lowerThreshold: [50.0, 3.0, 90.0]
+  upperThreshold: [90.0, 255.0, 255.0]
   minArea: 500
   maxArea: 7500
   arcLengthPercentage: 0.01
