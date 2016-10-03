@@ -13,11 +13,12 @@ vision:
   maxFPS: 30
 
   upsideDown: true
-  fieldOfView: [62.2, 48.8] # RPI camera FOV
+#  fieldOfView: [62.2, 48.8] # RPI camera FOV
+  fieldOfView: [65, 48.8] # RPI camera FOV
   distancePoly: { a: 247.79, b: -139.49, c: 110.84 }
   horizontalAngleOffset: 1.0
 
-  lowerThreshold: [50.0, 3.0, 90.0]
+  lowerThreshold: [50.0, 5.0, 90.0]
   upperThreshold: [90.0, 255.0, 255.0]
   minArea: 500
   maxArea: 7500

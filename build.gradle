@@ -117,6 +117,22 @@ def sudoCommand = { String command ->
     "echo ${password} | sudo -S ${command}"
 }
 
+task deployConfig(group: 'deploy') << {
+    println "Deploying config to ${remote}"
+    ssh.run {
+        session(remote) {
+            println "Stopping TatorVision service"
+            execute sudoCommand("systemctl stop TatorVision")
+            println "Deploying configs"
+            execute "mkdir -p ${deployDir}"
+            put from: files('./config.yml'), into: deployDir
+            println "Starting TatorVision service"
+            execute sudoCommand("systemctl start TatorVision")
+        }
+    }
+    println "Deploy config finished"
+}
+
 task deploy(dependsOn: jar, group: 'deploy') << {
     println "Deploying to ${remote}"
     ssh.run {
@@ -133,7 +149,6 @@ task deploy(dependsOn: jar, group: 'deploy') << {
     }
     println "Deploy finished"
 }
-deploy.dependsOn 'jar'
 
 task logs(group: 'deploy') << {
     println("Getting log from ${remote}")
