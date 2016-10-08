@@ -54,20 +54,15 @@ class FrameProcessor @Inject constructor(
 
     private class ContourInfo(
             val contour: MatOfPoint,
-            val contour2f: MatOfPoint2f,
             val area: Double,
             val center: Point
     )
 
     private fun getContourInfo(contour: MatOfPoint): ContourInfo {
-        val contour2f = MatOfPoint2f()
-        contour.convertTo(contour2f, CvType.CV_32FC2)
-        val epsilon = Imgproc.arcLength(contour2f, true) * config.arcLengthPercentage
-        Imgproc.approxPolyDP(contour2f, contour2f, epsilon, true)
-        val area = Imgproc.minAreaRect(contour2f).size.area()
+        val area = Imgproc.minAreaRect(contour).size.area()
         val moments = Imgproc.moments(contour)
         val center = moments.center
-        return ContourInfo(contour, contour2f, area, center)
+        return ContourInfo(contour, area, center)
     }
 
     var displayMat = Mat.zeros(config.inputRes, CvType.CV_8UC3)
