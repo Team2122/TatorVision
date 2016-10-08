@@ -23,6 +23,7 @@ vision:
   minArea: 500
   maxArea: 7500
   arcLengthPercentage: 0.01
+  minAreaToBoundsPercentage: 0.5
 
   debug: false
   display: CONTOURS
