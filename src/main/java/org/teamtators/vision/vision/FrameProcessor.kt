@@ -124,6 +124,8 @@ class FrameProcessor @Inject constructor(
                             && it.solidity <= config.maxSolidity
                 }
 
+
+
         // Find largest contour by area
         val trackingContour = filteredContours.maxBy { it.area }
 
@@ -218,5 +220,21 @@ class FrameProcessor @Inject constructor(
         mat.drawCenterRect(center, 25, 25, overlayColor)   //to be replaced with corrected targeting values
 //        mat.drawLine(Point(0.0, center.y), Point(width, center.y), overlayColor)
         mat.drawLine(Point(center.x, 0.0), Point(center.x, height), overlayColor)
+    }
+
+    private fun sortLeftToRight(contours: List<ContourInfo>) {
+        Collections.sort(contours, {info1: ContourInfo, info2: ContourInfo -> info1.center.x.compareTo(info2.center.x)});
+    }
+
+    private fun sortRightToLeft(contours: List<ContourInfo>) {
+        Collections.sort(contours, {info1: ContourInfo, info2: ContourInfo -> - info1.center.x.compareTo(info2.center.x)});
+    }
+
+    private fun sortTopToBottom(contours: List<ContourInfo>) {
+        Collections.sort(contours, {info1: ContourInfo, info2: ContourInfo -> - info1.center.y.compareTo(info2.center.x)});
+    }
+
+    private fun sortBottomToTop(contours: List<ContourInfo>) {
+        Collections.sort(contours, {info1: ContourInfo, info2: ContourInfo -> info1.center.y.compareTo(info2.center.x)});
     }
 }
