@@ -27,6 +27,7 @@ class FrameProcessor @Inject constructor(
 
     companion object {
         private val logger: Logger by loggerFactory()
+        private val fontFace = Core.FONT_HERSHEY_SIMPLEX
     }
 
     class ProcessResult(val frame: Mat, val target: Point?, val distance: Double?, val offsetAngle: Double?,
@@ -56,18 +57,25 @@ class FrameProcessor @Inject constructor(
             val contour: MatOfPoint,
             val contour2f: MatOfPoint2f,
             val area: Double,
-            val center: Point
+            val minAreaRect: RotatedRect,
+            val center: Point,
+            val rectArea: Double,
+            val solidity: Double
     )
 
     private fun getContourInfo(contour: MatOfPoint): ContourInfo {
+        val area = Imgproc.contourArea(contour)
         val contour2f = MatOfPoint2f()
         contour.convertTo(contour2f, CvType.CV_32FC2)
         val epsilon = Imgproc.arcLength(contour2f, true) * config.arcLengthPercentage
         Imgproc.approxPolyDP(contour2f, contour2f, epsilon, true)
-        val area = Imgproc.minAreaRect(contour2f).size.area()
-        val moments = Imgproc.moments(contour)
-        val center = moments.center
-        return ContourInfo(contour, contour2f, area, center)
+        val minAreaRect = Imgproc.minAreaRect(contour2f)
+        val rectArea = minAreaRect.size.area()
+        val center = minAreaRect.center
+//        val moments = Imgproc.moments(contour)
+//        val center = moments.center
+        val solidity = area / rectArea
+        return ContourInfo(contour, contour2f, area, minAreaRect, center, rectArea, solidity)
     }
 
     var displayMat = Mat.zeros(config.inputRes, CvType.CV_8UC3)
@@ -99,31 +107,36 @@ class FrameProcessor @Inject constructor(
         val contoursStart = System.nanoTime()
         val hierarchy = Mat()
         val rawContours = ArrayList<MatOfPoint>()
-        Imgproc.findContours(thresholdMat, rawContours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_TC89_L1)
+        Imgproc.findContours(thresholdMat, rawContours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_TC89_KCOS)
 
         val filterContoursStart = System.nanoTime()
-        // Get information on all contours and filter by area range
+        // Get information on contours and sort them
         val contours = rawContours
                 .map { getContourInfo(it) }
+                .sortedBy { it.center.x }
+
+        // Filter by area range
+        val filteredContours = contours
                 .filter {
-                    it.area >= config.minArea
-                            && it.area <= config.maxArea
+                    it.rectArea >= config.minArea
+                            && it.rectArea <= config.maxArea
+                            && it.solidity >= config.minSolidity
+                            && it.solidity <= config.maxSolidity
                 }
 
         // Find largest contour by area
-        val largestContour = contours.maxBy { it.area }
+        val trackingContour = filteredContours.maxBy { it.area }
 
         val drawStart = System.nanoTime()
         // Draw all contours, with the largest one in a larger thickness
         if (config.display == VisionDisplay.CONTOURS) {
             if (config.debug)
-                displayMat.drawContours(rawContours, color = Scalar(0.0, 0.0, 255.0), thickness = 1, hierarchy = hierarchy)
-            contours.forEach { contour ->
-                val thickness = if (contour == largestContour) 3 else 1;
-                displayMat.drawContour(contour.contour, color = Scalar(0.0, 255.0, 0.0), thickness = thickness)
-                displayMat.drawCircle(contour.center, 2, Scalar(255.0, 0.0, 0.0))
-                displayMat.drawText(contour.area.round().toString(), contour.center,
-                        fontFace = Core.FONT_HERSHEY_SIMPLEX, fontScale = 0.5, color = Scalar(255.0, 0.0, 0.0))
+                contours.forEach { contour ->
+                    drawContour(Scalar(0.0, 0.0, 255.0), contour, 1)
+                }
+            filteredContours.forEach { contour ->
+                val thickness = if (contour == trackingContour) 3 else 1;
+                drawContour(Scalar(0.0, 255.0, 0.0), contour, thickness)
             }
         }
 
@@ -137,7 +150,7 @@ class FrameProcessor @Inject constructor(
                 logger.trace("Process FPS: {}", fps)
         }
 
-        displayMat.drawText("${this.fps}", Point(5.0, 30.0), Core.FONT_HERSHEY_SIMPLEX, 1.0,
+        displayMat.drawText("${this.fps}", Point(5.0, 30.0), fontFace, 1.0,
                 overlayColor)
 
         val calculateStart = System.nanoTime()
@@ -146,17 +159,18 @@ class FrameProcessor @Inject constructor(
         var distance: Double? = null
         var offsetAngle: Double? = null
         var newAngle: Double? = null
-        if (largestContour != null) {
-            val center = largestContour.center
+        if (trackingContour != null) {
+            val center = trackingContour.center
             val height = inputMat.height()
             val width = inputMat.width()
             target = center
 
             distance = config.distancePoly.calculate(center.y / height.toDouble())
 
-            val widthInches = distance * Math.tan(config.fieldOfView.width.toRadians() / 2) * 2
-            val offsetInches = (center.x / width - .5) * widthInches
-            offsetAngle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
+//            val widthInches = distance * Math.tan(config.fieldOfView.width.toRadians() / 2) * 2
+//            val offsetInches = (center.x / width - .5) * widthInches
+//            offsetAngle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
+            offsetAngle = (center.x / width - 0.5) * config.fieldOfView.width
             newAngle = captureData.turretAngle + offsetAngle
         }
         val calculateEnd = System.nanoTime()
@@ -176,6 +190,25 @@ class FrameProcessor @Inject constructor(
 
 
         return ProcessResult(displayMat, target, distance, offsetAngle, newAngle)
+    }
+
+    private fun drawContour(color: Scalar, contour: ContourInfo, thickness: Int) {
+        if (config.debug)
+            displayMat.drawContour(contour.contour, color, thickness)
+        displayMat.drawRotatedRect(contour.minAreaRect, color = color, thickness = thickness)
+        displayMat.drawCircle(contour.center, 2, color)
+
+        val fontScale = 0.3
+
+        val str1 = String.format("area: %.0f", contour.rectArea);
+        val str1Size = Imgproc.getTextSize(str1, fontFace, fontScale, 1, null)
+        displayMat.drawText(str1, contour.center + Point(-str1Size.width / 2, -str1Size.height / 2),
+                fontFace = fontFace, fontScale = fontScale, color = color)
+
+        val str2 = String.format("solidity: %.4f", contour.solidity);
+        val str2Size = Imgproc.getTextSize(str2, fontFace, fontScale, 1, null)
+        displayMat.drawText(str2, contour.center + Point(-str1Size.width / 2, str2Size.height / 2),
+                fontFace = fontFace, fontScale = fontScale, color = color)
     }
 
     private fun drawCrosshair(mat: Mat) {

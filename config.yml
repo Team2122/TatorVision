@@ -9,31 +9,34 @@ server:
   port:  8080
 
 vision:
+  startVisionScript: >
+    v4l2-ctl -c auto_exposure=1 -c exposure_time_absolute=10 -c saturation=100
+
   cameraIndex: 0
-  maxFPS: 30
-
-  upsideDown: true
-#  fieldOfView: [62.2, 48.8] # RPI camera FOV
-  fieldOfView: [65, 48.8] # RPI camera FOV
-  distancePoly: { a: 247.79, b: -139.49, c: 110.84 }
-  horizontalAngleOffset: 1.0
-
-  lowerThreshold: [50.0, 5.0, 90.0]
-  upperThreshold: [90.0, 255.0, 255.0]
-  minArea: 500
-  maxArea: 7500
-  arcLengthPercentage: 0.01
-
-  debug: false
-  display: CONTOURS
-
   inputRes: [640, 480]
   streamRes: [640, 480]
 #  inputRes: [320, 240]
 #  streamRes: [320, 240]
+  maxFPS: 30
+  upsideDown: true
 
-  startVisionScript: >
-    v4l2-ctl -c auto_exposure=1 -c exposure_time_absolute=10 -c saturation=100
+  lowerThreshold: [50.0, 5.0, 90.0]
+  upperThreshold: [90.0, 255.0, 255.0]
+
+  minArea: 1000
+  maxArea: 10000
+  minSolidity: 0.0
+  maxSolidity: 1.0
+
+  arcLengthPercentage: 0.01
+
+#  fieldOfView: [62.2, 48.8] # RPI camera FOV
+  fieldOfView: [70, 48.8] # RPI camera FOV
+  distancePoly: { a: 233.56, b: -105.74, c: 64.401 }
+  horizontalAngleOffset: 1.0
+
+  debug: false
+  display: CONTOURS
 
 profile: false
 

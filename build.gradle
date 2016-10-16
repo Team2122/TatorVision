@@ -8,20 +8,16 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'org.hidetake:gradle-ssh-plugin:2.5.1'
     }
 }
 
 def openCVJavaDir = getProperty("openCVJavaDir")
-def deployHost = getProperty("deployHost")
-def deployDir = getProperty("deployDir")
 
 group 'org.teamtators.vision'
 
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'kotlin'
-apply plugin: 'org.hidetake.ssh'
 
 repositories {
     flatDir {
@@ -98,63 +94,4 @@ task run(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 
     systemProperty "tatorvision.opencvjavadir", openCVJavaDir
-}
-
-ssh.settings.knownHosts = ssh.settings.allowAnyHosts
-
-remotes {
-    tatorVision {
-        host = deployHost
-        user = 'tator'
-        password = 'Team2122'
-    }
-}
-
-def remote = remotes.tatorVision
-
-def sudoCommand = { String command ->
-    def password = remote.password
-    "echo ${password} | sudo -S ${command}"
-}
-
-task deployConfig(group: 'deploy') << {
-    println "Deploying config to ${remote}"
-    ssh.run {
-        session(remote) {
-            println "Stopping TatorVision service"
-            execute sudoCommand("systemctl stop TatorVision")
-            println "Deploying configs"
-            execute "mkdir -p ${deployDir}"
-            put from: files('./config.yml'), into: deployDir
-            println "Starting TatorVision service"
-            execute sudoCommand("systemctl start TatorVision")
-        }
-    }
-    println "Deploy config finished"
-}
-
-task deploy(dependsOn: jar, group: 'deploy') << {
-    println "Deploying to ${remote}"
-    ssh.run {
-        session(remote) {
-            println "Stopping TatorVision service"
-            execute sudoCommand("systemctl stop TatorVision")
-            println "Deploying jar and configs"
-            execute "mkdir -p ${deployDir}"
-            put from: files('./config.yml'), into: deployDir
-            put from: jar.archivePath, into: deployDir
-            println "Starting TatorVision service"
-            execute sudoCommand("systemctl start TatorVision")
-        }
-    }
-    println "Deploy finished"
-}
-
-task logs(group: 'deploy') << {
-    println("Getting log from ${remote}")
-    ssh.run {
-        session(remote) {
-            execute sudoCommand("journalctl -u TatorVision -n 100 --no-pager")
-        }
-    }
 }

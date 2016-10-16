@@ -28,8 +28,11 @@
 <label for="upperS">S</label><input id="upperS" type="number" min="0" max="255">
 <label for="upperV">V</label><input id="upperV" type="number" min="0" max="255">
 <h3>Contour Filters:</h3>
-<label for="minArea">Min Area</label><input id="minArea" type="number" min="0">
-<label for="maxArea">Max Area</label><input id="maxArea" type="number" min="0">
+<label for="minArea">Min Area</label><input id="minArea" type="number" min="0" step="100">
+<label for="maxArea">Max Area</label><input id="maxArea" type="number" min="0" step="100">
+<br>
+<label for="minSolidity">Min Solidity</label><input id="minSolidity" type="number" min="0" max="1" step="0.01">
+<label for="maxSolidity">Max Solidity</label><input id="maxSolidity" type="number" min="0" max="1" step="0.01">
 <script type="application/javascript">
     function readVisionConfig() {
         return $.getJSON('/visionConfig');
@@ -53,7 +56,9 @@
             upperS = $('#upperS'),
             upperV = $('#upperV'),
             minArea = $('#minArea'),
-            maxArea = $('#maxArea');
+            maxArea = $('#maxArea'),
+            minSolidity = $('#minSolidity'),
+            maxSolidity = $('#maxSolidity');
 
     readVisionConfig()
             .done(function (config) {
@@ -68,6 +73,8 @@
                 upperV.val(config.upperThreshold[2]);
                 minArea.val(config.minArea);
                 maxArea.val(config.maxArea);
+                minSolidity.val(config.minSolidity);
+                maxSolidity.val(config.maxSolidity);
             });
 
     debug.change(function (event) {
@@ -103,6 +110,13 @@
         updateVisionConfig({
             minArea: minArea.val(),
             maxArea: maxArea.val()
+        });
+    })
+
+    minSolidity.add(maxSolidity).change(function () {
+        updateVisionConfig({
+            minSolidity: minSolidity.val(),
+            maxSolidity: maxSolidity.val()
         });
     })
 

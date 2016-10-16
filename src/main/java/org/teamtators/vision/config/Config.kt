@@ -20,27 +20,29 @@ enum class VisionDisplay {
 }
 
 class VisionConfig {
-    var cameraIndex: Int = 0
-    var maxFPS: Int = 30
+    var startVisionScript: String = "true"
 
+    var cameraIndex: Int = 0
+    var inputRes: Size = Size()
+    var streamRes: Size = Size()
+    var maxFPS: Int = 30
     var upsideDown: Boolean = false
-    var fieldOfView: Size = Size(62.2, 48.8)
-    var distancePoly: Polynomial = Polynomial()
-    var horizontalAngleOffset: Double = 0.0
 
     var lowerThreshold: Scalar = Scalar(60.0, 150.0, 20.0)
     var upperThreshold: Scalar = Scalar(100.0, 255.0, 255.0)
     var minArea: Int = 1000
     var maxArea: Int = 100000
+    var minSolidity: Double = 0.0
+    var maxSolidity: Double = 1.0
+
     var arcLengthPercentage: Double = 0.01
+
+    var fieldOfView: Size = Size(62.2, 48.8)
+    var distancePoly: Polynomial = Polynomial()
+    var horizontalAngleOffset: Double = 0.0
 
     var debug: Boolean = false
     var display: VisionDisplay = VisionDisplay.CONTOURS
-
-    var inputRes: Size = Size()
-    var streamRes: Size = Size()
-
-    var startVisionScript: String = "true"
 }
 
 class Config {

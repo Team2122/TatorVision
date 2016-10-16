@@ -25,14 +25,9 @@ fun Mat.drawLine(point1: Point, point2: Point, color: Scalar, thickness: Int = 1
 }
 
 fun Mat.drawCenterRect(center: Point, width: Int, height: Int, color: Scalar, thickness: Int = 1) {
-    val upperLeft = Point(center.x - width / 2, center.y - height / 2)
-    val upperRight = Point(center.x + width / 2, center.y - height / 2)
-    val lowerRight = Point(center.x + width / 2, center.y + height / 2)
     val lowerLeft = Point(center.x - width / 2, center.y + height / 2)
-    this.drawLine(upperLeft, upperRight, color, thickness)
-    this.drawLine(upperRight, lowerRight, color, thickness)
-    this.drawLine(lowerRight, lowerLeft, color, thickness)
-    this.drawLine(lowerLeft, upperLeft, color, thickness)
+    val upperRight = Point(center.x + width / 2, center.y - height / 2)
+    Imgproc.rectangle(this, lowerLeft, upperRight, color, thickness)
 }
 
 fun Mat.drawCircle(center: Point, radius: Int, color: Scalar, thickness: Int = 1) {
@@ -52,6 +47,13 @@ fun Mat.drawContour(contour: MatOfPoint, color: Scalar, thickness: Int = 1, offs
     this.drawContours(Collections.singletonList(contour), color, thickness, offset = offset)
 }
 
+fun Mat.drawRotatedRect(rect: RotatedRect, color: Scalar, thickness: Int = 1) {
+    val points = Array<Point>(4, { Point() })
+    rect.points(points)
+    for (i in points.indices) {
+        drawLine(points[i], points[(i + 1) % points.size], color, thickness)
+    }
+}
 
 val Moments.center: Point
     get() = Point(m10 / m00, m01 / m00)
