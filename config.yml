@@ -27,7 +27,7 @@ vision:
   maxArea: 10000
   minSolidity: 0.0
   maxSolidity: 1.0
-
+  maxAreaDifference: 50 #Maximum difference in area between largest contours to
   arcLengthPercentage: 0.01
 
 #  fieldOfView: [62.2, 48.8] # RPI camera FOV

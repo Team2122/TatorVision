@@ -34,7 +34,7 @@ class VisionConfig {
     var maxArea: Int = 100000
     var minSolidity: Double = 0.0
     var maxSolidity: Double = 1.0
-
+    var maxAreaDifference: Int = 50
     var arcLengthPercentage: Double = 0.01
 
     var fieldOfView: Size = Size(62.2, 48.8)
