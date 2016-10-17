@@ -124,8 +124,17 @@ class FrameProcessor @Inject constructor(
                             && it.solidity <= config.maxSolidity
                 }
 
-        // Find largest contour by area
-        val trackingContour = filteredContours.maxBy { it.area }
+        val trackingContour: ContourInfo?;
+        if (contours.size >= 2) {
+            trackingContour = if (Math.abs(contours[0].area - contours[1].area) < config.maxAreaDifference) {
+                contours[0];
+            } else {
+                // Find largest contour by area
+                contours.maxBy { it.area }
+            }
+        } else {
+            trackingContour = contours.maxBy { it.area }
+        }
 
         val drawStart = System.nanoTime()
         // Draw all contours, with the largest one in a larger thickness
@@ -161,62 +170,78 @@ class FrameProcessor @Inject constructor(
         var newAngle: Double? = null
         if (trackingContour != null) {
             val center = trackingContour.center
-            val height = inputMat.height()
-            val width = inputMat.width()
-            target = center
+                val height = inputMat.height()
+                val width = inputMat.width()
+                target = center
 
-            distance = config.distancePoly.calculate(center.y / height.toDouble())
+                distance = config.distancePoly.calculate(center.y / height.toDouble())
 
 //            val widthInches = distance * Math.tan(config.fieldOfView.width.toRadians() / 2) * 2
 //            val offsetInches = (center.x / width - .5) * widthInches
 //            offsetAngle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
-            offsetAngle = (center.x / width - 0.5) * config.fieldOfView.width
-            newAngle = captureData.turretAngle + offsetAngle
+                offsetAngle = (center.x / width - 0.5) * config.fieldOfView.width
+                newAngle = captureData.turretAngle + offsetAngle
+            }
+            val calculateEnd = System.nanoTime()
+
+            if (_config.profile) {
+                val scale = 1
+                val thresholdTime = (erodeStart - thresholdStart) / scale
+                val erodeTime = (contoursStart - erodeStart) / scale
+                val contoursTime = (filterContoursStart - contoursStart) / scale
+                val filterContoursTime = (drawStart - filterContoursStart) / scale
+                val drawTime = (calculateStart - drawStart) / scale
+                val calculateTime = (calculateEnd - calculateStart) / scale
+                val totalTime = (calculateEnd - erodeStart) / scale
+                logger.trace("threshold: {}, erode: {}, contours: {}, filter: {}, draw: {}, calculate: {}, total: {}",
+                        thresholdTime, erodeTime, contoursTime, filterContoursTime, drawTime, calculateTime, totalTime)
+            }
+
+
+            return ProcessResult(displayMat, target, distance, offsetAngle, newAngle)
         }
-        val calculateEnd = System.nanoTime()
 
-        if (_config.profile) {
-            val scale = 1
-            val thresholdTime = (erodeStart - thresholdStart) / scale
-            val erodeTime = (contoursStart - erodeStart) / scale
-            val contoursTime = (filterContoursStart - contoursStart) / scale
-            val filterContoursTime = (drawStart - filterContoursStart) / scale
-            val drawTime = (calculateStart - drawStart) / scale
-            val calculateTime = (calculateEnd - calculateStart) / scale
-            val totalTime = (calculateEnd - erodeStart) / scale
-            logger.trace("threshold: {}, erode: {}, contours: {}, filter: {}, draw: {}, calculate: {}, total: {}",
-                    thresholdTime, erodeTime, contoursTime, filterContoursTime, drawTime, calculateTime, totalTime)
+        private fun drawContour(color: Scalar, contour: ContourInfo, thickness: Int) {
+            if (config.debug)
+                displayMat.drawContour(contour.contour, color, thickness)
+            displayMat.drawRotatedRect(contour.minAreaRect, color = color, thickness = thickness)
+            displayMat.drawCircle(contour.center, 2, color)
+
+            val fontScale = 0.3
+
+            val str1 = String.format("area: %.0f", contour.rectArea);
+            val str1Size = Imgproc.getTextSize(str1, fontFace, fontScale, 1, null)
+            displayMat.drawText(str1, contour.center + Point(-str1Size.width / 2, -str1Size.height / 2),
+                    fontFace = fontFace, fontScale = fontScale, color = color)
+
+            val str2 = String.format("solidity: %.4f", contour.solidity);
+            val str2Size = Imgproc.getTextSize(str2, fontFace, fontScale, 1, null)
+            displayMat.drawText(str2, contour.center + Point(-str1Size.width / 2, str2Size.height / 2),
+                    fontFace = fontFace, fontScale = fontScale, color = color)
         }
 
-
-        return ProcessResult(displayMat, target, distance, offsetAngle, newAngle)
-    }
-
-    private fun drawContour(color: Scalar, contour: ContourInfo, thickness: Int) {
-        if (config.debug)
-            displayMat.drawContour(contour.contour, color, thickness)
-        displayMat.drawRotatedRect(contour.minAreaRect, color = color, thickness = thickness)
-        displayMat.drawCircle(contour.center, 2, color)
-
-        val fontScale = 0.3
-
-        val str1 = String.format("area: %.0f", contour.rectArea);
-        val str1Size = Imgproc.getTextSize(str1, fontFace, fontScale, 1, null)
-        displayMat.drawText(str1, contour.center + Point(-str1Size.width / 2, -str1Size.height / 2),
-                fontFace = fontFace, fontScale = fontScale, color = color)
-
-        val str2 = String.format("solidity: %.4f", contour.solidity);
-        val str2Size = Imgproc.getTextSize(str2, fontFace, fontScale, 1, null)
-        displayMat.drawText(str2, contour.center + Point(-str1Size.width / 2, str2Size.height / 2),
-                fontFace = fontFace, fontScale = fontScale, color = color)
-    }
-
-    private fun drawCrosshair(mat: Mat) {
-        val center = mat.size().toPoint() / 2.0
+        private fun drawCrosshair(mat: Mat) {
+            val center = mat.size().toPoint() / 2.0
 //        val width = mat.size().width
-        val height = mat.size().height
-        mat.drawCenterRect(center, 25, 25, overlayColor)   //to be replaced with corrected targeting values
+            val height = mat.size().height
+            mat.drawCenterRect(center, 25, 25, overlayColor)   //to be replaced with corrected targeting values
 //        mat.drawLine(Point(0.0, center.y), Point(width, center.y), overlayColor)
-        mat.drawLine(Point(center.x, 0.0), Point(center.x, height), overlayColor)
+            mat.drawLine(Point(center.x, 0.0), Point(center.x, height), overlayColor)
+        }
+
+        private fun sortLeftToRight(contours: List<ContourInfo>) {
+            Collections.sort(contours, { info1: ContourInfo, info2: ContourInfo -> info1.center.x.compareTo(info2.center.x) });
+        }
+
+        private fun sortRightToLeft(contours: List<ContourInfo>) {
+            Collections.sort(contours, { info1: ContourInfo, info2: ContourInfo -> -info1.center.x.compareTo(info2.center.x) });
+        }
+
+        private fun sortTopToBottom(contours: List<ContourInfo>) {
+            Collections.sort(contours, { info1: ContourInfo, info2: ContourInfo -> -info1.center.y.compareTo(info2.center.x) });
+        }
+
+        private fun sortBottomToTop(contours: List<ContourInfo>) {
+            Collections.sort(contours, { info1: ContourInfo, info2: ContourInfo -> info1.center.y.compareTo(info2.center.x) });
+        }
     }
-}
