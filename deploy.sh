@@ -80,7 +80,7 @@ deploy_all() {
 }
 
 reboot() {
-    run_ssh /sbin/reboot
+    run_sudo /sbin/reboot
     log "Device is rebooting"
 }
 

@@ -10,7 +10,7 @@ server:
 
 vision:
   startVisionScript: >
-    v4l2-ctl -c auto_exposure=1 -c exposure_time_absolute=3 -c saturation=0 -c white_balance_auto_preset=1
+    v4l2-ctl -c white_balance_auto_preset=1,red_balance=1000,blue_balance=1000,contrast=0,saturation=100,auto_exposure=1,exposure_time_absolute=0,exposure_dynamic_framerate=1,auto_exposure_bias=0
 
   cameraIndex: 0
   inputRes: [640, 480]
@@ -20,8 +20,8 @@ vision:
   maxFPS: 30
   upsideDown: true
 
-  lowerThreshold: [50.0, 125.0, 125.0]
-  upperThreshold: [70.0, 255.0, 255.0]
+  lowerThreshold: [40.0, 200.0, 200.0]
+  upperThreshold: [80.0, 255.0, 255.0]
 
   minArea: 1000
   maxArea: 10000

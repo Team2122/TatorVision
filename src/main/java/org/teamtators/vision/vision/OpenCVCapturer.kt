@@ -13,12 +13,15 @@ import org.teamtators.vision.events.StartEvent
 import org.teamtators.vision.events.StopEvent
 import org.teamtators.vision.tables.NetworkTablesUpdater
 import org.teamtators.vision.util.runScript
+import java.util.*
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 class OpenCVCapturer @Inject constructor(
         val _config: Config,
         val eventBus: EventBus,
-        val executor: ExecutorService,
+        val executor: ScheduledExecutorService,
         val processRunner: ProcessRunner,
         val networkTablesUpdater: NetworkTablesUpdater
 ) {
@@ -60,7 +63,7 @@ class OpenCVCapturer @Inject constructor(
     private fun run() {
         val videoCapture: VideoCapture = try {
             if (System.getProperty("os.name").contains("linux", true))
-                configureCamera(config.startVisionScript)
+                executor.schedule({ configureCamera(config.startVisionScript) }, 5, TimeUnit.SECONDS)
             else
                 logger.debug("Not running on linux, not configuring camera")
 

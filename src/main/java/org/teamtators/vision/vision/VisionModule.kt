@@ -8,6 +8,7 @@ import com.google.inject.Singleton
 import org.teamtators.vision.guiceKt.AbstractKotlinModule
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 
 class VisionModule(val useRpiCapturer: Boolean) : AbstractKotlinModule() {
     override fun configure() {
@@ -23,7 +24,11 @@ class VisionModule(val useRpiCapturer: Boolean) : AbstractKotlinModule() {
     }
 
     @Provides @Singleton
-    fun providesExecutorService(): ExecutorService = Executors.newCachedThreadPool()
+    fun providesScheduledExecutorService() = Executors.newScheduledThreadPool(5)
+
+    @Provides @Singleton
+    fun providesExecutorService(scheduledExecutorService: ScheduledExecutorService): ExecutorService
+            = scheduledExecutorService
 
     @Provides @Singleton
     fun providesEventBus(/*executor: Executor*/): EventBus = AsyncEventBus("TatorVision", MoreExecutors.directExecutor())
