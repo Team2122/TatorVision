@@ -1,6 +1,6 @@
 tables:
   enabled: true
-  host: "roboRIO-212-FRC.local"
+  host: "10.91.22.2"
 #  host: "127.0.0.1"
   tableName: "TatorVision"
 
@@ -21,7 +21,7 @@ vision:
   upsideDown: true
 
   lowerThreshold: [40.0, 200.0, 200.0]
-  upperThreshold: [80.0, 255.0, 255.0]
+  upperThreshold: [100.0, 255.0, 255.0]
 
   minArea: 1000
   maxArea: 10000
@@ -33,7 +33,7 @@ vision:
 #  fieldOfView: [62.2, 48.8] # RPI camera FOV
   fieldOfView: [70, 48.8] # RPI camera FOV
   distancePoly: { a: 233.56, b: -105.74, c: 64.401 }
-  horizontalAngleOffset: 1.0
+  horizontalAngleOffset: 1.5
 
   debug: false
   display: CONTOURS

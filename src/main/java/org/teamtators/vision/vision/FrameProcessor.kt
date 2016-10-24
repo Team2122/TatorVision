@@ -170,7 +170,7 @@ class FrameProcessor @Inject constructor(
 //            val widthInches = distance * Math.tan(config.fieldOfView.width.toRadians() / 2) * 2
 //            val offsetInches = (center.x / width - .5) * widthInches
 //            offsetAngle = Math.atan2(offsetInches, distance).toDegrees() + config.horizontalAngleOffset
-            offsetAngle = (center.x / width - 0.5) * config.fieldOfView.width
+            offsetAngle = (center.x / width - 0.5) * config.fieldOfView.width + config.horizontalAngleOffset
             newAngle = captureData.turretAngle + offsetAngle
         }
         val calculateEnd = System.nanoTime()
