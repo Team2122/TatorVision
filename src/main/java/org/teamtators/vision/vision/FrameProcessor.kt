@@ -107,7 +107,7 @@ class FrameProcessor @Inject constructor(
         val contoursStart = System.nanoTime()
         val hierarchy = Mat()
         val rawContours = ArrayList<MatOfPoint>()
-        Imgproc.findContours(thresholdMat, rawContours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_TC89_KCOS)
+        Imgproc.findContours(thresholdMat, rawContours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
 
         val filterContoursStart = System.nanoTime()
         // Get information on contours and sort them
